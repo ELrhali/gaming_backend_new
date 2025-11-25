@@ -1,0 +1,78 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Commandes{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <h2 class="mb-0"><i class="bi bi-cart me-2"></i>Commandes</h2>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">Tous les statuts</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>En attente</option>
+                    <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Confirmée</option>
+                    <option value="preparing" {% if request.GET.status == 'preparing' %}selected{% endif %}>En préparation</option>
+                    <option value="shipped" {% if request.GET.status == 'shipped' %}selected{% endif %}>Expédiée</option>
+                    <option value="delivered" {% if request.GET.status == 'delivered' %}selected{% endif %}>Livrée</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Annulée</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>N° Commande</th>
+                        <th>Client</th>
+                        <th class="d-none d-md-table-cell">Téléphone</th>
+                        <th class="d-none d-lg-table-cell">Ville</th>
+                        <th style="width: 100px;">Total</th>
+                        <th style="width: 120px;">Statut</th>
+                        <th class="d-none d-xl-table-cell" style="width: 130px;">Date</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>{{ order.customer.first_name }} {{ order.customer.last_name }}</td>
+                        <td class="d-none d-md-table-cell"><small>{{ order.customer.phone }}</small></td>
+                        <td class="d-none d-lg-table-cell"><small>{{ order.customer.city }}</small></td>
+                        <td><strong>{{ order.total }}</strong> <small>DH</small></td>
+                        <td>
+                            <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'confirmed' %}info{% elif order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="d-none d-xl-table-cell"><small>{{ order.created_at|date:"d/m/Y H:i" }}</small></td>
+                        <td>
+                            <a href="{% url 'admin_panel:order_detail' order.pk %}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Aucune commande</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

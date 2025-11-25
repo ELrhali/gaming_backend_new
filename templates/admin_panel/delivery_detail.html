@@ -1,0 +1,59 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Détail Livraison{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Livraison - {{ delivery.order.order_number }}</h1>
+    <div>
+        <a href="{% url 'admin_panel:delivery_update' delivery.pk %}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        <a href="{% url 'admin_panel:delivery_list' %}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Informations Livraison</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Statut:</strong> 
+                    <span class="badge bg-{% if delivery.status == 'pending' %}warning{% elif delivery.status == 'in_transit' %}info{% elif delivery.status == 'delivered' %}success{% else %}danger{% endif %}">
+                        {{ delivery.get_status_display }}
+                    </span>
+                </p>
+                <p><strong>Numéro de suivi:</strong> {{ delivery.tracking_number|default:"-" }}</p>
+                <p><strong>Transporteur:</strong> {{ delivery.carrier|default:"-" }}</p>
+                <p><strong>Nombre de colis:</strong> {{ delivery.package_count }}</p>
+                <p><strong>Date d'expédition:</strong> {{ delivery.shipped_at|date:"d/m/Y à H:i"|default:"-" }}</p>
+                <p><strong>Date de livraison:</strong> {{ delivery.delivered_at|date:"d/m/Y à H:i"|default:"-" }}</p>
+                {% if delivery.notes %}
+                    <p><strong>Notes:</strong> {{ delivery.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Commande Associée</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>N° Commande:</strong> {{ delivery.order.order_number }}</p>
+                <p><strong>Client:</strong> {{ delivery.order.customer.first_name }} {{ delivery.order.customer.last_name }}</p>
+                <p><strong>Téléphone:</strong> {{ delivery.order.customer.phone }}</p>
+                <p><strong>Adresse:</strong> {{ delivery.order.customer.address }}</p>
+                <p><strong>Ville:</strong> {{ delivery.order.customer.city }}</p>
+                <p><strong>Total:</strong> {{ delivery.order.total }} DH</p>
+                <a href="{% url 'admin_panel:order_detail' delivery.order.pk %}" class="btn btn-sm btn-outline-primary">
+                    Voir la commande
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

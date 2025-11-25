@@ -1,0 +1,73 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Livraisons{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <h2 class="mb-0"><i class="bi bi-truck me-2"></i>Livraisons</h2>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">Tous les statuts</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>En attente</option>
+                    <option value="in_transit" {% if request.GET.status == 'in_transit' %}selected{% endif %}>En cours</option>
+                    <option value="delivered" {% if request.GET.status == 'delivered' %}selected{% endif %}>Livré</option>
+                    <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Échec</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>N° Commande</th>
+                        <th>Client</th>
+                        <th>N° Suivi</th>
+                        <th>Transporteur</th>
+                        <th>Statut</th>
+                        <th>Date expédition</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for delivery in deliveries %}
+                    <tr>
+                        <td><strong>{{ delivery.order.order_number }}</strong></td>
+                        <td>{{ delivery.order.customer.first_name }} {{ delivery.order.customer.last_name }}</td>
+                        <td>{{ delivery.tracking_number|default:"-" }}</td>
+                        <td>{{ delivery.carrier|default:"-" }}</td>
+                        <td>
+                            <span class="badge bg-{% if delivery.status == 'pending' %}warning{% elif delivery.status == 'in_transit' %}info{% elif delivery.status == 'delivered' %}success{% else %}danger{% endif %}">
+                                {{ delivery.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ delivery.shipped_at|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'admin_panel:delivery_detail' delivery.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Gérer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Aucune livraison</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

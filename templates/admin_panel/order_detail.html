@@ -1,0 +1,144 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Détail Commande {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Commande {{ order.order_number }}</h1>
+    <div>
+        {% if order.status == 'pending' %}
+            <a href="{% url 'admin_panel:order_confirm' order.pk %}" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Confirmer
+            </a>
+            <a href="{% url 'admin_panel:order_cancel' order.pk %}" class="btn btn-danger">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        {% endif %}
+        <a href="{% url 'admin_panel:order_list' %}" class="btn btn-secondary">Retour</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informations client -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Informations Client</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nom:</strong> {{ order.customer.first_name }} {{ order.customer.last_name }}</p>
+                <p><strong>Téléphone:</strong> {{ order.customer.phone }}</p>
+                {% if order.customer.email %}
+                    <p><strong>Email:</strong> {{ order.customer.email }}</p>
+                {% endif %}
+                <p><strong>Adresse:</strong> {{ order.customer.address }}</p>
+                <p><strong>Ville:</strong> {{ order.customer.city }}</p>
+                {% if order.customer.postal_code %}
+                    <p><strong>Code postal:</strong> {{ order.customer.postal_code }}</p>
+                {% endif %}
+                {% if order.customer.notes %}
+                    <p><strong>Notes:</strong> {{ order.customer.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations commande -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Informations Commande</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Statut:</strong> 
+                    <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'confirmed' %}info{% elif order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </p>
+                <p><strong>Mode de paiement:</strong> {{ order.get_payment_method_display }}</p>
+                <p><strong>Date de commande:</strong> {{ order.created_at|date:"d/m/Y à H:i" }}</p>
+                {% if order.confirmed_at %}
+                    <p><strong>Date de confirmation:</strong> {{ order.confirmed_at|date:"d/m/Y à H:i" }}</p>
+                {% endif %}
+                {% if order.customer_notes %}
+                    <p><strong>Notes du client:</strong> {{ order.customer_notes }}</p>
+                {% endif %}
+                {% if order.admin_notes %}
+                    <p><strong>Notes admin:</strong> {{ order.admin_notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles de la commande -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Articles</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Produit</th>
+                        <th>Prix unitaire</th>
+                        <th>Quantité</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ item.product_reference }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.unit_price }} DH</td>
+                        <td>{{ item.quantity }}</td>
+                        <td><strong>{{ item.total_price }} DH</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Sous-total:</strong></td>
+                        <td><strong>{{ order.subtotal }} DH</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Frais de livraison:</strong></td>
+                        <td><strong>{{ order.shipping_cost }} DH</strong></td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                        <td><strong>{{ order.total }} DH</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Livraison -->
+{% if order.delivery %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Livraison</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Statut:</strong> 
+            <span class="badge bg-{% if order.delivery.status == 'pending' %}warning{% elif order.delivery.status == 'in_transit' %}info{% elif order.delivery.status == 'delivered' %}success{% else %}danger{% endif %}">
+                {{ order.delivery.get_status_display }}
+            </span>
+        </p>
+        {% if order.delivery.tracking_number %}
+            <p><strong>Numéro de suivi:</strong> {{ order.delivery.tracking_number }}</p>
+        {% endif %}
+        {% if order.delivery.carrier %}
+            <p><strong>Transporteur:</strong> {{ order.delivery.carrier }}</p>
+        {% endif %}
+        <a href="{% url 'admin_panel:delivery_detail' order.delivery.pk %}" class="btn btn-primary">Gérer la livraison</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

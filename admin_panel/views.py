@@ -1,0 +1,731 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.db.models import Sum, Count, Q
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from datetime import datetime, timedelta
+import json
+
+from shop.models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification
+from orders.models import Order, OrderItem, Delivery
+from .forms import CategoryForm, SubCategoryForm, TypeForm, ProductForm, OrderStatusForm, DeliveryForm
+
+
+# ==================== Authentification ====================
+
+def admin_login(request):
+    if request.user.is_authenticated:
+        return redirect('admin_panel:dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None and user.is_staff:
+            login(request, user)
+            return redirect('admin_panel:dashboard')
+        else:
+            messages.error(request, 'Identifiants invalides ou accès non autorisé.')
+    
+    return render(request, 'admin_panel/login.html')
+
+
+@login_required
+def admin_logout(request):
+    logout(request)
+    return redirect('admin_panel:login')
+
+
+# ==================== Dashboard ====================
+
+@login_required
+def dashboard(request):
+    # Filtres par date
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    period = request.GET.get('period', 'all')  # all, today, week, month
+    
+    # Définir les dates selon la période
+    now = timezone.now()
+    if period == 'today':
+        date_from = now.date()
+        date_to = now.date()
+    elif period == 'week':
+        date_from = (now - timedelta(days=7)).date()
+        date_to = now.date()
+    elif period == 'month':
+        date_from = (now - timedelta(days=30)).date()
+        date_to = now.date()
+    
+    # Filtrer les commandes selon la période
+    orders_query = Order.objects.all()
+    if date_from:
+        orders_query = orders_query.filter(created_at__date__gte=date_from)
+    if date_to:
+        orders_query = orders_query.filter(created_at__date__lte=date_to)
+    
+    # Statistiques globales
+    total_products = Product.objects.count()
+    total_categories = Category.objects.count()
+    total_users = User.objects.filter(is_staff=True).count()
+    
+    # Statistiques des commandes
+    total_orders = orders_query.count()
+    pending_orders = orders_query.filter(status='pending').count()
+    confirmed_orders = orders_query.filter(status='confirmed').count()
+    delivered_orders = orders_query.filter(status='delivered').count()
+    cancelled_orders = orders_query.filter(status='cancelled').count()
+    
+    # Revenus
+    total_revenue = orders_query.filter(status__in=['confirmed', 'delivered']).aggregate(
+        total=Sum('total'))['total'] or 0
+    pending_revenue = orders_query.filter(status='pending').aggregate(
+        total=Sum('total'))['total'] or 0
+    
+    # Statistiques par jour (pour le graphique)
+    daily_stats_query = orders_query.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id'),
+        revenue=Sum('total')
+    ).order_by('-date')[:30]
+    
+    # Convertir en liste pour le template et JSON
+    daily_stats = []
+    for stat in daily_stats_query:
+        daily_stats.append({
+            'date': stat['date'].strftime('%d/%m'),
+            'count': stat['count'],
+            'revenue': float(stat['revenue'] or 0)
+        })
+    daily_stats.reverse()  # Ordre chronologique pour le graphique
+    
+    # Dernières commandes
+    recent_orders = orders_query.select_related('customer').order_by('-created_at')[:10]
+    
+    # Produits les plus vendus dans la période
+    from orders.models import OrderItem
+    top_products = OrderItem.objects.filter(
+        order__in=orders_query
+    ).values(
+        'product__name', 'product__reference'
+    ).annotate(
+        quantity=Sum('quantity')
+    ).order_by('-quantity')[:5]
+    
+    context = {
+        'total_products': total_products,
+        'total_categories': total_categories,
+        'total_users': total_users,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'confirmed_orders': confirmed_orders,
+        'delivered_orders': delivered_orders,
+        'cancelled_orders': cancelled_orders,
+        'total_revenue': total_revenue,
+        'pending_revenue': pending_revenue,
+        'recent_orders': recent_orders,
+        'top_products': top_products,
+        'daily_stats': json.dumps(daily_stats),
+        'date_from': date_from or now.date(),
+        'date_to': date_to or now.date(),
+        'period': period,
+    }
+    return render(request, 'admin_panel/dashboard.html', context)
+
+
+# ==================== Catégories ====================
+
+@login_required
+def category_list(request):
+    categories = Category.objects.all()
+    
+    # Filtre par recherche
+    search = request.GET.get('search', '')
+    if search:
+        categories = categories.filter(Q(name__icontains=search) | Q(description__icontains=search))
+    
+    # Filtre par statut
+    status = request.GET.get('status', '')
+    if status == 'active':
+        categories = categories.filter(is_active=True)
+    elif status == 'inactive':
+        categories = categories.filter(is_active=False)
+    
+    categories = categories.order_by('order', 'name')
+    return render(request, 'admin_panel/category_list.html', {
+        'categories': categories,
+        'search': search,
+        'status': status,
+    })
+
+
+@login_required
+def category_add(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Catégorie ajoutée avec succès.')
+            return redirect('admin_panel:category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'admin_panel/category_form.html', {'form': form, 'title': 'Ajouter une catégorie'})
+
+
+@login_required
+def category_edit(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Catégorie modifiée avec succès.')
+            return redirect('admin_panel:category_list')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'admin_panel/category_form.html', {'form': form, 'title': 'Modifier la catégorie'})
+
+
+@login_required
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Catégorie supprimée avec succès.')
+        return redirect('admin_panel:category_list')
+    return render(request, 'admin_panel/category_confirm_delete.html', {'category': category})
+
+
+# ==================== Sous-catégories ====================
+
+@login_required
+def subcategory_list(request):
+    subcategories = SubCategory.objects.select_related('category')
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    
+    # Filtre par recherche
+    search = request.GET.get('search', '')
+    if search:
+        subcategories = subcategories.filter(
+            Q(name__icontains=search) | 
+            Q(description__icontains=search) |
+            Q(category__name__icontains=search)
+        )
+    
+    # Filtre par catégorie
+    category_id = request.GET.get('category', '')
+    if category_id:
+        subcategories = subcategories.filter(category_id=category_id)
+    
+    # Filtre par statut
+    status = request.GET.get('status', '')
+    if status == 'active':
+        subcategories = subcategories.filter(is_active=True)
+    elif status == 'inactive':
+        subcategories = subcategories.filter(is_active=False)
+    
+    # Filtre par affichage page d'accueil
+    homepage = request.GET.get('homepage', '')
+    if homepage == 'yes':
+        subcategories = subcategories.filter(show_on_homepage=True)
+    elif homepage == 'no':
+        subcategories = subcategories.filter(show_on_homepage=False)
+    
+    subcategories = subcategories.order_by('category__name', 'order', 'name')
+    return render(request, 'admin_panel/subcategory_list.html', {
+        'subcategories': subcategories,
+        'categories': categories,
+        'search': search,
+        'category_id': category_id,
+        'status': status,
+        'homepage': homepage,
+    })
+
+
+@login_required
+def subcategory_add(request):
+    if request.method == 'POST':
+        form = SubCategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Sous-catégorie ajoutée avec succès.')
+            return redirect('admin_panel:subcategory_list')
+    else:
+        form = SubCategoryForm()
+    return render(request, 'admin_panel/subcategory_form.html', {'form': form, 'title': 'Ajouter une sous-catégorie'})
+
+
+@login_required
+def subcategory_edit(request, pk):
+    subcategory = get_object_or_404(SubCategory, pk=pk)
+    if request.method == 'POST':
+        form = SubCategoryForm(request.POST, request.FILES, instance=subcategory)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Sous-catégorie modifiée avec succès.')
+            return redirect('admin_panel:subcategory_list')
+    else:
+        form = SubCategoryForm(instance=subcategory)
+    return render(request, 'admin_panel/subcategory_form.html', {'form': form, 'title': 'Modifier la sous-catégorie'})
+
+
+@login_required
+def subcategory_delete(request, pk):
+    subcategory = get_object_or_404(SubCategory, pk=pk)
+    if request.method == 'POST':
+        subcategory.delete()
+        messages.success(request, 'Sous-catégorie supprimée avec succès.')
+        return redirect('admin_panel:subcategory_list')
+    return render(request, 'admin_panel/subcategory_confirm_delete.html', {'subcategory': subcategory})
+
+
+# ==================== Types ====================
+
+@login_required
+def type_list(request):
+    types = Type.objects.select_related('subcategory', 'subcategory__category')
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    subcategories = SubCategory.objects.filter(is_active=True).order_by('name')
+    
+    # Filtre par recherche
+    search = request.GET.get('search', '')
+    if search:
+        types = types.filter(
+            Q(name__icontains=search) | 
+            Q(description__icontains=search) |
+            Q(subcategory__name__icontains=search) |
+            Q(subcategory__category__name__icontains=search)
+        )
+    
+    # Filtre par catégorie
+    category_id = request.GET.get('category', '')
+    if category_id:
+        types = types.filter(subcategory__category_id=category_id)
+    
+    # Filtre par sous-catégorie
+    subcategory_id = request.GET.get('subcategory', '')
+    if subcategory_id:
+        types = types.filter(subcategory_id=subcategory_id)
+    
+    # Filtre par statut
+    status = request.GET.get('status', '')
+    if status == 'active':
+        types = types.filter(is_active=True)
+    elif status == 'inactive':
+        types = types.filter(is_active=False)
+    
+    types = types.order_by('subcategory__name', 'order', 'name')
+    return render(request, 'admin_panel/type_list.html', {
+        'types': types,
+        'categories': categories,
+        'subcategories': subcategories,
+        'search': search,
+        'category_id': category_id,
+        'subcategory_id': subcategory_id,
+        'status': status,
+    })
+
+
+@login_required
+def type_add(request):
+    if request.method == 'POST':
+        form = TypeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Type ajouté avec succès.')
+            return redirect('admin_panel:type_list')
+    else:
+        form = TypeForm()
+    return render(request, 'admin_panel/type_form.html', {'form': form, 'title': 'Ajouter un type'})
+
+
+@login_required
+def type_edit(request, pk):
+    type_obj = get_object_or_404(Type, pk=pk)
+    if request.method == 'POST':
+        form = TypeForm(request.POST, instance=type_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Type modifié avec succès.')
+            return redirect('admin_panel:type_list')
+    else:
+        form = TypeForm(instance=type_obj)
+    return render(request, 'admin_panel/type_form.html', {'form': form, 'title': 'Modifier le type'})
+
+
+@login_required
+def type_delete(request, pk):
+    type_obj = get_object_or_404(Type, pk=pk)
+    if request.method == 'POST':
+        type_obj.delete()
+        messages.success(request, 'Type supprimé avec succès.')
+        return redirect('admin_panel:type_list')
+    return render(request, 'admin_panel/type_confirm_delete.html', {'type': type_obj})
+
+
+# ==================== Produits ====================
+
+@login_required
+def product_list(request):
+    products = Product.objects.select_related('category', 'subcategory').prefetch_related('images').order_by('-created_at')
+    
+    # Filtres
+    category_id = request.GET.get('category')
+    subcategory_id = request.GET.get('subcategory')
+    search = request.GET.get('search')
+    
+    if category_id:
+        products = products.filter(category_id=category_id)
+    if subcategory_id:
+        products = products.filter(subcategory_id=subcategory_id)
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | 
+            Q(reference__icontains=search) | 
+            Q(description__icontains=search)
+        )
+    
+    categories = Category.objects.all()
+    return render(request, 'admin_panel/product_list.html', {
+        'products': products,
+        'categories': categories
+    })
+
+
+@login_required
+def product_add(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save()
+            
+            # Gérer les images multiples
+            images = request.FILES.getlist('product_images')
+            main_image_index = request.POST.get('main_image_index', '0')
+            
+            for idx, image in enumerate(images):
+                is_main = (str(idx) == main_image_index)
+                ProductImage.objects.create(
+                    product=product,
+                    image=image,
+                    is_main=is_main,
+                    order=idx
+                )
+            
+            # Gérer les caractéristiques
+            spec_keys = request.POST.getlist('spec_key[]')
+            spec_values = request.POST.getlist('spec_value[]')
+            
+            for idx, (key, value) in enumerate(zip(spec_keys, spec_values)):
+                if key.strip() and value.strip():  # Ignorer les champs vides
+                    ProductSpecification.objects.create(
+                        product=product,
+                        key=key.strip(),
+                        value=value.strip(),
+                        order=idx
+                    )
+            
+            messages.success(request, 'Produit ajouté avec succès.')
+            return redirect('admin_panel:product_list')
+    else:
+        form = ProductForm()
+    return render(request, 'admin_panel/product_form.html', {'form': form, 'title': 'Ajouter un produit'})
+
+
+@login_required
+def product_edit(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save()
+            
+            # Gérer les nouvelles images
+            images = request.FILES.getlist('product_images')
+            if images:
+                # Récupérer l'index de l'image principale parmi les nouvelles images
+                main_image_index = request.POST.get('main_image_index', '')
+                
+                # Calculer l'ordre de départ (après les images existantes)
+                existing_count = product.images.count()
+                
+                for idx, image in enumerate(images):
+                    is_main = (str(idx) == main_image_index)
+                    # Si cette nouvelle image est principale, désélectionner les autres
+                    if is_main:
+                        product.images.update(is_main=False)
+                    
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image,
+                        is_main=is_main,
+                        order=existing_count + idx
+                    )
+            
+            # Gérer la mise à jour de l'image principale existante
+            existing_main_id = request.POST.get('existing_main_image')
+            if existing_main_id:
+                product.images.update(is_main=False)
+                product.images.filter(id=existing_main_id).update(is_main=True)
+            
+            # Gérer les caractéristiques
+            # D'abord, supprimer les anciennes caractéristiques
+            product.specifications.all().delete()
+            
+            # Ajouter les nouvelles caractéristiques
+            spec_keys = request.POST.getlist('spec_key[]')
+            spec_values = request.POST.getlist('spec_value[]')
+            
+            for idx, (key, value) in enumerate(zip(spec_keys, spec_values)):
+                if key.strip() and value.strip():
+                    ProductSpecification.objects.create(
+                        product=product,
+                        key=key.strip(),
+                        value=value.strip(),
+                        order=idx
+                    )
+            
+            messages.success(request, 'Produit modifié avec succès.')
+            return redirect('admin_panel:product_list')
+    else:
+        form = ProductForm(instance=product)
+    
+    return render(request, 'admin_panel/product_form.html', {
+        'form': form, 
+        'title': 'Modifier le produit',
+        'product': product
+    })
+
+
+@login_required
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Produit supprimé avec succès.')
+        return redirect('admin_panel:product_list')
+    return render(request, 'admin_panel/product_confirm_delete.html', {'product': product})
+
+
+@login_required
+def product_image_delete(request, pk):
+    """Supprimer une image de produit"""
+    from django.http import JsonResponse
+    
+    if request.method == 'POST':
+        try:
+            image = get_object_or_404(ProductImage, pk=pk)
+            product = image.product
+            
+            # Si c'était l'image principale, définir une autre image comme principale
+            if image.is_main and product.images.count() > 1:
+                next_image = product.images.exclude(pk=pk).first()
+                if next_image:
+                    next_image.is_main = True
+                    next_image.save()
+            
+            image.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+# ==================== Commandes ====================
+
+@login_required
+def order_list(request):
+    orders = Order.objects.select_related('customer').order_by('-created_at')
+    
+    # Filtres
+    status = request.GET.get('status')
+    if status:
+        orders = orders.filter(status=status)
+    
+    return render(request, 'admin_panel/order_list.html', {'orders': orders})
+
+
+@login_required
+def order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    order_items = order.items.select_related('product').all()
+    
+    return render(request, 'admin_panel/order_detail.html', {
+        'order': order,
+        'order_items': order_items
+    })
+
+
+@login_required
+def order_confirm(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == 'POST':
+        order.status = 'confirmed'
+        order.confirmed_at = timezone.now()
+        order.save()
+        
+        # Créer une livraison si elle n'existe pas
+        if not hasattr(order, 'delivery'):
+            Delivery.objects.create(order=order)
+        
+        messages.success(request, f'Commande {order.order_number} confirmée.')
+        return redirect('admin_panel:order_detail', pk=pk)
+    return render(request, 'admin_panel/order_confirm.html', {'order': order})
+
+
+@login_required
+def order_cancel(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == 'POST':
+        order.status = 'cancelled'
+        order.save()
+        messages.success(request, f'Commande {order.order_number} annulée.')
+        return redirect('admin_panel:order_detail', pk=pk)
+    return render(request, 'admin_panel/order_cancel.html', {'order': order})
+
+
+# ==================== Livraisons ====================
+
+@login_required
+def delivery_list(request):
+    deliveries = Delivery.objects.select_related('order', 'order__customer').order_by('-created_at')
+    
+    # Filtres
+    status = request.GET.get('status')
+    if status:
+        deliveries = deliveries.filter(status=status)
+    
+    return render(request, 'admin_panel/delivery_list.html', {'deliveries': deliveries})
+
+
+@login_required
+def delivery_detail(request, pk):
+    delivery = get_object_or_404(Delivery, pk=pk)
+    return render(request, 'admin_panel/delivery_detail.html', {'delivery': delivery})
+
+
+@login_required
+def delivery_update(request, pk):
+    delivery = get_object_or_404(Delivery, pk=pk)
+    if request.method == 'POST':
+        form = DeliveryForm(request.POST, instance=delivery)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Livraison mise à jour avec succès.')
+            return redirect('admin_panel:delivery_detail', pk=pk)
+    else:
+        form = DeliveryForm(instance=delivery)
+    return render(request, 'admin_panel/delivery_form.html', {'form': form, 'delivery': delivery})
+
+
+# ==================== Gestion des Utilisateurs ====================
+
+@login_required
+def user_list(request):
+    """Liste tous les utilisateurs admin"""
+    users = User.objects.filter(is_staff=True).order_by('-date_joined')
+    return render(request, 'admin_panel/user_list.html', {'users': users})
+
+
+@login_required
+def user_add(request):
+    """Ajouter un nouvel utilisateur admin"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        is_superuser = request.POST.get('is_superuser') == 'on'
+        
+        # Validation
+        if not username or not password:
+            messages.error(request, 'Le nom d\'utilisateur et le mot de passe sont requis.')
+            return render(request, 'admin_panel/user_form.html', {'title': 'Ajouter un utilisateur'})
+        
+        if password != password_confirm:
+            messages.error(request, 'Les mots de passe ne correspondent pas.')
+            return render(request, 'admin_panel/user_form.html', {'title': 'Ajouter un utilisateur'})
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Ce nom d\'utilisateur existe déjà.')
+            return render(request, 'admin_panel/user_form.html', {'title': 'Ajouter un utilisateur'})
+        
+        # Créer l'utilisateur
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.is_staff = True
+        user.is_superuser = is_superuser
+        user.save()
+        
+        messages.success(request, f'Utilisateur {username} créé avec succès.')
+        return redirect('admin_panel:user_list')
+    
+    return render(request, 'admin_panel/user_form.html', {'title': 'Ajouter un utilisateur'})
+
+
+@login_required
+def user_edit(request, pk):
+    """Modifier un utilisateur admin"""
+    user = get_object_or_404(User, pk=pk)
+    
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.is_superuser = request.POST.get('is_superuser') == 'on'
+        user.is_active = request.POST.get('is_active') == 'on'
+        
+        # Changer le mot de passe seulement si fourni
+        new_password = request.POST.get('password')
+        if new_password:
+            password_confirm = request.POST.get('password_confirm')
+            if new_password == password_confirm:
+                user.set_password(new_password)
+            else:
+                messages.error(request, 'Les mots de passe ne correspondent pas.')
+                return render(request, 'admin_panel/user_form.html', {
+                    'title': 'Modifier l\'utilisateur',
+                    'user_obj': user
+                })
+        
+        user.save()
+        messages.success(request, f'Utilisateur {user.username} modifié avec succès.')
+        return redirect('admin_panel:user_list')
+    
+    return render(request, 'admin_panel/user_form.html', {
+        'title': 'Modifier l\'utilisateur',
+        'user_obj': user
+    })
+
+
+@login_required
+def user_delete(request, pk):
+    """Supprimer un utilisateur admin"""
+    user = get_object_or_404(User, pk=pk)
+    
+    # Empêcher la suppression de son propre compte
+    if user.id == request.user.id:
+        messages.error(request, 'Vous ne pouvez pas supprimer votre propre compte.')
+        return redirect('admin_panel:user_list')
+    
+    if request.method == 'POST':
+        username = user.username
+        user.delete()
+        messages.success(request, f'Utilisateur {username} supprimé avec succès.')
+        return redirect('admin_panel:user_list')
+    
+    return render(request, 'admin_panel/user_confirm_delete.html', {'user_obj': user})

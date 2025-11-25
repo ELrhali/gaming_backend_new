@@ -1,0 +1,161 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>{{ title }}</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin_panel:user_list' %}">Utilisateurs</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Nom d'utilisateur <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   value="{{ user_obj.username|default:'' }}"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ user_obj.email|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">Prénom</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="{{ user_obj.first_name|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Nom</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   value="{{ user_obj.last_name|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">
+                                Mot de passe 
+                                {% if not user_obj %}
+                                <span class="text-danger">*</span>
+                                {% else %}
+                                <small class="text-muted">(laisser vide pour ne pas changer)</small>
+                                {% endif %}
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password"
+                                   {% if not user_obj %}required{% endif %}>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password_confirm" class="form-label">
+                                Confirmer le mot de passe
+                                {% if not user_obj %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password_confirm" 
+                                   name="password_confirm"
+                                   {% if not user_obj %}required{% endif %}>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="is_superuser" 
+                                   name="is_superuser"
+                                   {% if user_obj.is_superuser %}checked{% endif %}>
+                            <label class="form-check-label" for="is_superuser">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                Superadmin (accès complet au système)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    {% if user_obj %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="is_active" 
+                                   name="is_active"
+                                   {% if user_obj.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                Compte actif
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_panel:user_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password_confirm').value;
+    
+    {% if not user_obj %}
+    // Mode création : mot de passe requis
+    if (!password) {
+        e.preventDefault();
+        alert('Le mot de passe est requis.');
+        return;
+    }
+    {% endif %}
+    
+    // Vérifier la correspondance si un mot de passe est saisi
+    if (password && password !== passwordConfirm) {
+        e.preventDefault();
+        alert('Les mots de passe ne correspondent pas.');
+        return;
+    }
+});
+</script>
+{% endblock %}

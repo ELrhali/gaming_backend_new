@@ -1,0 +1,25 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Confirmer la commande{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Confirmer la commande</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-info">
+            <h5><i class="bi bi-info-circle"></i> Confirmation</h5>
+            <p>Voulez-vous confirmer la commande <strong>{{ order.order_number }}</strong> ?</p>
+            <p>Le client sera informé que sa commande est confirmée.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Oui, confirmer</button>
+            <a href="{% url 'admin_panel:order_detail' order.pk %}" class="btn btn-secondary">Non, annuler</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

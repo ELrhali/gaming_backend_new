@@ -1,0 +1,90 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestion des Utilisateurs</h2>
+    <a href="{% url 'admin_panel:user_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Ajouter un utilisateur
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Email</th>
+                        <th>Nom complet</th>
+                        <th>Statut</th>
+                        <th>Superadmin</th>
+                        <th>Date d'inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_obj in users %}
+                    <tr>
+                        <td>{{ user_obj.id }}</td>
+                        <td>
+                            <strong>{{ user_obj.username }}</strong>
+                            {% if user_obj.id == request.user.id %}
+                            <span class="badge bg-info text-dark ms-2">Vous</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user_obj.email|default:"-" }}</td>
+                        <td>{{ user_obj.get_full_name|default:"-" }}</td>
+                        <td>
+                            {% if user_obj.is_active %}
+                            <span class="badge bg-success">Actif</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user_obj.is_superuser %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ user_obj.date_joined|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'admin_panel:user_edit' user_obj.pk %}" 
+                               class="btn btn-sm btn-outline-primary me-1" 
+                               title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if user_obj.id != request.user.id %}
+                            <a href="{% url 'admin_panel:user_delete' user_obj.pk %}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            Aucun utilisateur trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <p class="text-muted">
+        <i class="bi bi-info-circle me-1"></i>
+        Total : <strong>{{ users.count }}</strong> utilisateur(s)
+    </p>
+</div>
+{% endblock %}

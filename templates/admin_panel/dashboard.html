@@ -1,0 +1,320 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Dashboard - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+</div>
+
+<!-- Filtres de date -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">Date de début</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ date_from|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">Date de fin</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ date_to|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="period" class="form-label">Période rapide</label>
+                <select class="form-select" id="period" name="period">
+                    <option value="all" {% if period == 'all' %}selected{% endif %}>Toutes les dates</option>
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter me-1"></i>Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-box-seam me-1"></i>Total Produits
+                </h6>
+                <h2 class="card-title mb-1">{{ total_products }}</h2>
+                <small class="text-muted">{{ total_categories }} catégorie(s)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card stat-card h-100" style="border-left-color: #28a745;">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-cart-check me-1"></i>Commandes confirmées
+                </h6>
+                <h2 class="card-title mb-1">{{ confirmed_orders }}</h2>
+                <small class="text-success">{{ delivered_orders }} livrée(s)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card stat-card h-100" style="border-left-color: #ffc107;">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-clock-history me-1"></i>En attente
+                </h6>
+                <h2 class="card-title mb-1">{{ pending_orders }}</h2>
+                <small class="text-warning">{{ pending_revenue|floatformat:2 }} DH en attente</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card stat-card h-100" style="border-left-color: #17a2b8;">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-currency-dollar me-1"></i>Revenu Total
+                </h6>
+                <h2 class="card-title mb-1">{{ total_revenue|floatformat:2 }} DH</h2>
+                <small class="text-info">{{ total_orders }} commande(s)</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques secondaires -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Annulées</h6>
+                <h3 class="text-danger">{{ cancelled_orders }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Utilisateurs admin</h6>
+                <h3 class="text-primary">{{ total_users }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Période affichée</h6>
+                <p class="mb-0">
+                    <strong>Du :</strong> {{ date_from|date:"d/m/Y" }} 
+                    <strong>Au :</strong> {{ date_to|date:"d/m/Y" }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphique des ventes quotidiennes -->
+{% if daily_stats %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Commandes quotidiennes (30 derniers jours)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Dernières commandes -->
+    <div class="col-md-8 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Dernières commandes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>N° Commande</th>
+                                <th>Client</th>
+                                <th>Total</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><strong>{{ order.order_number }}</strong></td>
+                                <td>{{ order.customer.first_name }} {{ order.customer.last_name }}</td>
+                                <td>{{ order.total }} DH</td>
+                                <td>
+                                    <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'confirmed' %}success{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_panel:order_detail' order.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">Aucune commande</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Produits -->
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-star me-2"></i>Top Produits
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for item in top_products %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ item.product__name|truncatewords:4 }}</h6>
+                                <small class="text-muted">{{ item.product__reference }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary rounded-pill">{{ item.quantity }}</span>
+                                <small class="d-block text-muted">vendus</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-3">Aucune vente</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if daily_stats %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const dailyData = {{ daily_stats|safe }};
+    
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyData.map(d => d.date),
+            datasets: [{
+                label: 'Commandes',
+                data: dailyData.map(d => d.count),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.3,
+                fill: true
+            }, {
+                label: 'Revenu (DH)',
+                data: dailyData.map(d => d.revenue),
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                tension: 0.3,
+                fill: true,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                if (context.datasetIndex === 1) {
+                                    label += context.parsed.y.toFixed(2) + ' DH';
+                                } else {
+                                    label += context.parsed.y;
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Nombre de commandes'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Revenu (DH)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+
+<script>
+    // Auto-remplir les dates selon la période sélectionnée
+    document.getElementById('period').addEventListener('change', function() {
+        if (this.value !== 'all') {
+            document.querySelector('form').submit();
+        }
+    });
+</script>
+{% endblock %}

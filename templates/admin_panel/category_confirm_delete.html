@@ -1,0 +1,25 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Supprimer la catégorie</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <h5><i class="bi bi-exclamation-triangle"></i> Attention!</h5>
+            <p>Êtes-vous sûr de vouloir supprimer la catégorie <strong>{{ category.name }}</strong> ?</p>
+            <p>Cette action supprimera également toutes les sous-catégories et types associés.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+            <a href="{% url 'admin_panel:category_list' %}" class="btn btn-secondary">Non, annuler</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
