@@ -1,0 +1,113 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ title }}</h1>
+    <a href="{% url 'admin_panel:brand_list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nom de la marque <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{% if brand %}{{ brand.name }}{% endif %}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="logo" class="form-label">Logo</label>
+                        {% if brand and brand.logo %}
+                        <div class="mb-2">
+                            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;">
+                            <p class="text-muted small">Logo actuel</p>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                        <small class="text-muted">Formats acceptés: JPG, PNG, SVG. Taille recommandée: 200x100px</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{% if brand %}{{ brand.description }}{% endif %}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="website" class="form-label">Site Web</label>
+                        <input type="url" class="form-control" id="website" name="website" 
+                               value="{% if brand %}{{ brand.website }}{% endif %}" 
+                               placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="order" class="form-label">Ordre d'affichage</label>
+                            <input type="number" class="form-control" id="order" name="order" 
+                                   value="{% if brand %}{{ brand.order }}{% else %}0{% endif %}" min="0">
+                            <small class="text-muted">Les marques sont triées par ordre croissant</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label d-block">Statut</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if not brand or brand.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Marque active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'admin_panel:brand_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-2">
+                    <i class="bi bi-lightbulb"></i> <strong>Conseils:</strong>
+                </p>
+                <ul class="small text-muted">
+                    <li>Le nom de la marque doit être unique</li>
+                    <li>Le logo sera affiché avec les produits</li>
+                    <li>L'ordre détermine la position dans les filtres</li>
+                    <li>Seules les marques actives sont visibles publiquement</li>
+                </ul>
+                
+                {% if brand %}
+                <hr>
+                <p class="text-muted mb-2">
+                    <i class="bi bi-calendar"></i> <strong>Dates:</strong>
+                </p>
+                <ul class="small text-muted">
+                    <li>Créé le: {{ brand.created_at|date:"d/m/Y H:i" }}</li>
+                    <li>Modifié le: {{ brand.updated_at|date:"d/m/Y H:i" }}</li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

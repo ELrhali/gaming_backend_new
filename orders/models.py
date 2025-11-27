@@ -71,6 +71,9 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name="Date de confirmation")
+    
+    # Gestion du stock
+    stock_deducted = models.BooleanField(default=False, verbose_name="Stock déduit")
 
     class Meta:
         verbose_name = "Commande"

@@ -1,0 +1,47 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Supprimer une marque - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmation de suppression</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Êtes-vous sûr de vouloir supprimer cette marque ?</p>
+                
+                <div class="alert alert-light border">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if brand.logo %}
+                        <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="width: 80px; height: 80px; object-fit: contain;">
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-1">{{ brand.name }}</h6>
+                            {% if brand.description %}
+                            <p class="text-muted small mb-0">{{ brand.description|truncatewords:15 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> <strong>Attention:</strong> Cette action est irréversible. 
+                    Les produits associés à cette marque ne seront pas supprimés, mais leur référence à cette marque sera retirée.
+                </div>
+                
+                <form method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Confirmer la suppression
+                    </button>
+                    <a href="{% url 'admin_panel:brand_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

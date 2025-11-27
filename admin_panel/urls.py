@@ -29,6 +29,12 @@ urlpatterns = [
     path('types/<int:pk>/edit/', views.type_edit, name='type_edit'),
     path('types/<int:pk>/delete/', views.type_delete, name='type_delete'),
     
+    # Marques
+    path('brands/', views.brand_list, name='brand_list'),
+    path('brands/add/', views.brand_add, name='brand_add'),
+    path('brands/<int:pk>/edit/', views.brand_edit, name='brand_edit'),
+    path('brands/<int:pk>/delete/', views.brand_delete, name='brand_delete'),
+    
     # Produits
     path('products/', views.product_list, name='product_list'),
     path('products/add/', views.product_add, name='product_add'),
@@ -52,4 +58,17 @@ urlpatterns = [
     path('users/add/', views.user_add, name='user_add'),
     path('users/<int:pk>/edit/', views.user_edit, name='user_edit'),
     path('users/<int:pk>/delete/', views.user_delete, name='user_delete'),
+    
+    # Hero Slides
+    path('hero-slides/', views.hero_slide_list, name='hero_slide_list'),
+    path('hero-slides/add/', views.hero_slide_add, name='hero_slide_add'),
+    path('hero-slides/<int:pk>/edit/', views.hero_slide_edit, name='hero_slide_edit'),
+    path('hero-slides/<int:pk>/delete/', views.hero_slide_delete, name='hero_slide_delete'),
+    
+    # AJAX endpoints
+    path('ajax/subcategories/', views.get_subcategories_by_category, name='ajax_subcategories'),
+    path('ajax/subcategories-by-category/', views.get_subcategories_by_category, name='ajax_subcategories_by_category'),
+    path('ajax/types/', views.get_types_by_subcategory, name='ajax_types'),
+    path('ajax/types-by-brand/', views.get_types_by_brand, name='ajax_types_by_brand'),
+    path('ajax/types-filtered/', views.get_types_filtered, name='ajax_types_filtered'),
 ]

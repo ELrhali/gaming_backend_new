@@ -9,9 +9,9 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import json
 
-from shop.models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification
+from shop.models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification, Brand, HeroSlide
 from orders.models import Order, OrderItem, Delivery
-from .forms import CategoryForm, SubCategoryForm, TypeForm, ProductForm, OrderStatusForm, DeliveryForm
+from .forms import CategoryForm, SubCategoryForm, TypeForm, ProductForm, OrderStatusForm, DeliveryForm, HeroSlideForm
 
 
 # ==================== Authentification ====================
@@ -45,12 +45,15 @@ def admin_logout(request):
 @login_required
 def dashboard(request):
     # Filtres par date
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
     period = request.GET.get('period', 'all')  # all, today, week, month
     
     # Définir les dates selon la période
     now = timezone.now()
+    date_from = None
+    date_to = None
+    
+    # Si une période rapide est sélectionnée, utiliser les calculs de dates
+    # IMPORTANT: Ne PAS utiliser les paramètres date_from/date_to de l'URL si period != 'all'
     if period == 'today':
         date_from = now.date()
         date_to = now.date()
@@ -60,13 +63,42 @@ def dashboard(request):
     elif period == 'month':
         date_from = (now - timedelta(days=30)).date()
         date_to = now.date()
+    elif period == 'all':
+        # Utiliser les dates manuelles uniquement si period='all'
+        date_from_str = request.GET.get('date_from', '').strip()
+        date_to_str = request.GET.get('date_to', '').strip()
+        
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
     
-    # Filtrer les commandes selon la période
+    # Debug: afficher les filtres appliqués
+    print(f"🔍 Dashboard filters: period={period}, date_from={date_from}, date_to={date_to}")
+    
+    # Filtrer les commandes selon la période - utiliser des datetimes au lieu de dates
     orders_query = Order.objects.all()
+    print(f"📊 Total orders in DB: {orders_query.count()}")
+    
     if date_from:
-        orders_query = orders_query.filter(created_at__date__gte=date_from)
+        # Convertir la date en datetime avec début de journée (00:00:00)
+        from datetime import datetime as dt
+        datetime_from = timezone.make_aware(dt.combine(date_from, dt.min.time()))
+        orders_query = orders_query.filter(created_at__gte=datetime_from)
+        print(f"📊 After date_from filter (>= {datetime_from}): {orders_query.count()}")
     if date_to:
-        orders_query = orders_query.filter(created_at__date__lte=date_to)
+        # Convertir la date en datetime avec fin de journée (23:59:59)
+        from datetime import datetime as dt
+        datetime_to = timezone.make_aware(dt.combine(date_to, dt.max.time()))
+        orders_query = orders_query.filter(created_at__lte=datetime_to)
+        print(f"📊 After date_to filter (<= {datetime_to}): {orders_query.count()}")
     
     # Statistiques globales
     total_products = Product.objects.count()
@@ -97,11 +129,13 @@ def dashboard(request):
     # Convertir en liste pour le template et JSON
     daily_stats = []
     for stat in daily_stats_query:
-        daily_stats.append({
-            'date': stat['date'].strftime('%d/%m'),
-            'count': stat['count'],
-            'revenue': float(stat['revenue'] or 0)
-        })
+        # Vérifier que la date existe
+        if stat['date'] is not None:
+            daily_stats.append({
+                'date': stat['date'].strftime('%d/%m'),
+                'count': stat['count'],
+                'revenue': float(stat['revenue'] or 0)
+            })
     daily_stats.reverse()  # Ordre chronologique pour le graphique
     
     # Dernières commandes
@@ -130,9 +164,12 @@ def dashboard(request):
         'pending_revenue': pending_revenue,
         'recent_orders': recent_orders,
         'top_products': top_products,
-        'daily_stats': json.dumps(daily_stats),
-        'date_from': date_from or now.date(),
-        'date_to': date_to or now.date(),
+        'daily_stats': json.dumps(daily_stats) if daily_stats else '[]',
+        'has_stats': len(daily_stats) > 0,
+        'date_from': date_from,
+        'date_to': date_to,
+        'date_from_str': date_from.strftime('%Y-%m-%d') if date_from else '',
+        'date_to_str': date_to.strftime('%Y-%m-%d') if date_to else '',
         'period': period,
     }
     return render(request, 'admin_panel/dashboard.html', context)
@@ -236,6 +273,13 @@ def subcategory_list(request):
     elif homepage == 'no':
         subcategories = subcategories.filter(show_on_homepage=False)
     
+    # Filtre par sous-catégorie essentielle
+    essential = request.GET.get('essential', '')
+    if essential == 'yes':
+        subcategories = subcategories.filter(is_essential=True)
+    elif essential == 'no':
+        subcategories = subcategories.filter(is_essential=False)
+    
     subcategories = subcategories.order_by('category__name', 'order', 'name')
     return render(request, 'admin_panel/subcategory_list.html', {
         'subcategories': subcategories,
@@ -244,6 +288,7 @@ def subcategory_list(request):
         'category_id': category_id,
         'status': status,
         'homepage': homepage,
+        'essential': essential,
     })
 
 
@@ -288,9 +333,10 @@ def subcategory_delete(request, pk):
 
 @login_required
 def type_list(request):
-    types = Type.objects.select_related('subcategory', 'subcategory__category')
+    types = Type.objects.select_related('subcategory', 'subcategory__category', 'brand')
     categories = Category.objects.filter(is_active=True).order_by('name')
     subcategories = SubCategory.objects.filter(is_active=True).order_by('name')
+    brands = Brand.objects.filter(is_active=True).order_by('name')
     
     # Filtre par recherche
     search = request.GET.get('search', '')
@@ -299,8 +345,14 @@ def type_list(request):
             Q(name__icontains=search) | 
             Q(description__icontains=search) |
             Q(subcategory__name__icontains=search) |
-            Q(subcategory__category__name__icontains=search)
+            Q(subcategory__category__name__icontains=search) |
+            Q(brand__name__icontains=search)
         )
+    
+    # Filtre par marque
+    brand_id = request.GET.get('brand', '')
+    if brand_id:
+        types = types.filter(brand_id=brand_id)
     
     # Filtre par catégorie
     category_id = request.GET.get('category', '')
@@ -324,7 +376,9 @@ def type_list(request):
         'types': types,
         'categories': categories,
         'subcategories': subcategories,
+        'brands': brands,
         'search': search,
+        'brand_id': brand_id,
         'category_id': category_id,
         'subcategory_id': subcategory_id,
         'status': status,
@@ -366,6 +420,85 @@ def type_delete(request, pk):
         messages.success(request, 'Type supprimé avec succès.')
         return redirect('admin_panel:type_list')
     return render(request, 'admin_panel/type_confirm_delete.html', {'type': type_obj})
+
+
+# ==================== Marques ====================
+
+@login_required
+def brand_list(request):
+    brands = Brand.objects.all()
+    
+    # Filtre par recherche
+    search = request.GET.get('search', '')
+    if search:
+        brands = brands.filter(Q(name__icontains=search) | Q(description__icontains=search))
+    
+    # Filtre par statut
+    status = request.GET.get('status', '')
+    if status == 'active':
+        brands = brands.filter(is_active=True)
+    elif status == 'inactive':
+        brands = brands.filter(is_active=False)
+    
+    brands = brands.order_by('order', 'name')
+    return render(request, 'admin_panel/brand_list.html', {
+        'brands': brands,
+        'search': search,
+        'status': status,
+    })
+
+
+@login_required
+def brand_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        logo = request.FILES.get('logo')
+        description = request.POST.get('description', '')
+        website = request.POST.get('website', '')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        brand = Brand.objects.create(
+            name=name,
+            logo=logo,
+            description=description,
+            website=website,
+            order=order,
+            is_active=is_active
+        )
+        messages.success(request, 'Marque ajoutée avec succès.')
+        return redirect('admin_panel:brand_list')
+    
+    return render(request, 'admin_panel/brand_form.html', {'title': 'Ajouter une marque'})
+
+
+@login_required
+def brand_edit(request, pk):
+    brand = get_object_or_404(Brand, pk=pk)
+    if request.method == 'POST':
+        brand.name = request.POST.get('name')
+        if 'logo' in request.FILES:
+            brand.logo = request.FILES.get('logo')
+        brand.description = request.POST.get('description', '')
+        brand.website = request.POST.get('website', '')
+        brand.order = request.POST.get('order', 0)
+        brand.is_active = request.POST.get('is_active') == 'on'
+        brand.save()
+        
+        messages.success(request, 'Marque modifiée avec succès.')
+        return redirect('admin_panel:brand_list')
+    
+    return render(request, 'admin_panel/brand_form.html', {'brand': brand, 'title': 'Modifier la marque'})
+
+
+@login_required
+def brand_delete(request, pk):
+    brand = get_object_or_404(Brand, pk=pk)
+    if request.method == 'POST':
+        brand.delete()
+        messages.success(request, 'Marque supprimée avec succès.')
+        return redirect('admin_panel:brand_list')
+    return render(request, 'admin_panel/brand_confirm_delete.html', {'brand': brand})
 
 
 # ==================== Produits ====================
@@ -434,7 +567,11 @@ def product_add(request):
             return redirect('admin_panel:product_list')
     else:
         form = ProductForm()
-    return render(request, 'admin_panel/product_form.html', {'form': form, 'title': 'Ajouter un produit'})
+    
+    return render(request, 'admin_panel/product_form.html', {
+        'form': form,
+        'title': 'Ajouter un produit',
+    })
 
 
 @login_required
@@ -498,7 +635,7 @@ def product_edit(request, pk):
     return render(request, 'admin_panel/product_form.html', {
         'form': form, 
         'title': 'Modifier le produit',
-        'product': product
+        'product': product,
     })
 
 
@@ -543,12 +680,67 @@ def product_image_delete(request, pk):
 def order_list(request):
     orders = Order.objects.select_related('customer').order_by('-created_at')
     
-    # Filtres
+    # Filtres par statut
     status = request.GET.get('status')
     if status:
         orders = orders.filter(status=status)
     
-    return render(request, 'admin_panel/order_list.html', {'orders': orders})
+    # Filtres par date
+    period = request.GET.get('period', '')
+    date_from = None
+    date_to = None
+    
+    now = timezone.now()
+    
+    if period == 'today':
+        date_from = now.date()
+        date_to = now.date()
+    elif period == 'week':
+        date_from = (now - timedelta(days=7)).date()
+        date_to = now.date()
+    elif period == 'month':
+        date_from = (now - timedelta(days=30)).date()
+        date_to = now.date()
+    elif period == 'all':
+        # Dates manuelles
+        date_from_str = request.GET.get('date_from', '').strip()
+        date_to_str = request.GET.get('date_to', '').strip()
+        
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+    
+    # Appliquer les filtres de date
+    if date_from:
+        from datetime import datetime as dt
+        datetime_from = timezone.make_aware(dt.combine(date_from, dt.min.time()))
+        orders = orders.filter(created_at__gte=datetime_from)
+    
+    if date_to:
+        from datetime import datetime as dt
+        datetime_to = timezone.make_aware(dt.combine(date_to, dt.max.time()))
+        orders = orders.filter(created_at__lte=datetime_to)
+    
+    # Préparer les dates pour le template
+    date_from_str = date_from.strftime('%Y-%m-%d') if date_from else ''
+    date_to_str = date_to.strftime('%Y-%m-%d') if date_to else ''
+    
+    return render(request, 'admin_panel/order_list.html', {
+        'orders': orders,
+        'period': period,
+        'date_from': date_from,
+        'date_to': date_to,
+        'date_from_str': date_from_str,
+        'date_to_str': date_to_str,
+    })
 
 
 @login_required
@@ -566,15 +758,41 @@ def order_detail(request, pk):
 def order_confirm(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == 'POST':
+        # Vérifier si le stock a déjà été déduit
+        if order.stock_deducted:
+            messages.warning(request, f'La commande {order.order_number} a déjà été confirmée et le stock a déjà été déduit.')
+            return redirect('admin_panel:order_detail', pk=pk)
+        
+        # Vérifier le stock disponible pour tous les produits
+        insufficient_stock = []
+        for item in order.items.all():
+            if item.product.quantity < item.quantity:
+                insufficient_stock.append(f"{item.product_name} (Stock disponible: {item.product.quantity}, Quantité demandée: {item.quantity})")
+        
+        if insufficient_stock:
+            messages.error(request, f'❌ Stock insuffisant pour: {", ".join(insufficient_stock)}')
+            return redirect('admin_panel:order_detail', pk=pk)
+        
+        # Déduire les quantités du stock
+        for item in order.items.all():
+            product = item.product
+            old_quantity = product.quantity
+            product.quantity -= item.quantity
+            product.save(update_fields=['quantity'])
+            # Log pour debug
+            print(f"✅ Stock mis à jour pour {product.name}: {old_quantity} → {product.quantity}")
+        
+        # Mettre à jour le statut de la commande et marquer le stock comme déduit
         order.status = 'confirmed'
         order.confirmed_at = timezone.now()
+        order.stock_deducted = True
         order.save()
         
         # Créer une livraison si elle n'existe pas
         if not hasattr(order, 'delivery'):
             Delivery.objects.create(order=order)
         
-        messages.success(request, f'Commande {order.order_number} confirmée.')
+        messages.success(request, f'✅ Commande {order.order_number} confirmée. Le stock a été mis à jour.')
         return redirect('admin_panel:order_detail', pk=pk)
     return render(request, 'admin_panel/order_confirm.html', {'order': order})
 
@@ -583,9 +801,23 @@ def order_confirm(request, pk):
 def order_cancel(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == 'POST':
+        # Si le stock a été déduit, le restaurer
+        if order.stock_deducted:
+            for item in order.items.all():
+                product = item.product
+                old_quantity = product.quantity
+                product.quantity += item.quantity
+                product.save(update_fields=['quantity'])
+                # Log pour debug
+                print(f"♻️ Stock restauré pour {product.name}: {old_quantity} → {product.quantity}")
+            
+            order.stock_deducted = False
+            messages.success(request, f'✅ Commande {order.order_number} annulée. Le stock a été restauré.')
+        else:
+            messages.success(request, f'Commande {order.order_number} annulée.')
+        
         order.status = 'cancelled'
         order.save()
-        messages.success(request, f'Commande {order.order_number} annulée.')
         return redirect('admin_panel:order_detail', pk=pk)
     return render(request, 'admin_panel/order_cancel.html', {'order': order})
 
@@ -596,12 +828,67 @@ def order_cancel(request, pk):
 def delivery_list(request):
     deliveries = Delivery.objects.select_related('order', 'order__customer').order_by('-created_at')
     
-    # Filtres
+    # Filtres par statut
     status = request.GET.get('status')
     if status:
         deliveries = deliveries.filter(status=status)
     
-    return render(request, 'admin_panel/delivery_list.html', {'deliveries': deliveries})
+    # Filtres par date
+    period = request.GET.get('period', '')
+    date_from = None
+    date_to = None
+    
+    now = timezone.now()
+    
+    if period == 'today':
+        date_from = now.date()
+        date_to = now.date()
+    elif period == 'week':
+        date_from = (now - timedelta(days=7)).date()
+        date_to = now.date()
+    elif period == 'month':
+        date_from = (now - timedelta(days=30)).date()
+        date_to = now.date()
+    elif period == 'all':
+        # Dates manuelles
+        date_from_str = request.GET.get('date_from', '').strip()
+        date_to_str = request.GET.get('date_to', '').strip()
+        
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+    
+    # Appliquer les filtres de date
+    if date_from:
+        from datetime import datetime as dt
+        datetime_from = timezone.make_aware(dt.combine(date_from, dt.min.time()))
+        deliveries = deliveries.filter(created_at__gte=datetime_from)
+    
+    if date_to:
+        from datetime import datetime as dt
+        datetime_to = timezone.make_aware(dt.combine(date_to, dt.max.time()))
+        deliveries = deliveries.filter(created_at__lte=datetime_to)
+    
+    # Préparer les dates pour le template
+    date_from_str = date_from.strftime('%Y-%m-%d') if date_from else ''
+    date_to_str = date_to.strftime('%Y-%m-%d') if date_to else ''
+    
+    return render(request, 'admin_panel/delivery_list.html', {
+        'deliveries': deliveries,
+        'period': period,
+        'date_from': date_from,
+        'date_to': date_to,
+        'date_from_str': date_from_str,
+        'date_to_str': date_to_str,
+    })
 
 
 @login_required
@@ -729,3 +1016,151 @@ def user_delete(request, pk):
         return redirect('admin_panel:user_list')
     
     return render(request, 'admin_panel/user_confirm_delete.html', {'user_obj': user})
+
+
+# ==================== AJAX Endpoints ====================
+
+from django.http import JsonResponse
+
+@login_required
+def get_subcategories_by_category(request):
+    """Retourne les sous-catégories d'une catégorie donnée"""
+    category_id = request.GET.get('category_id')
+    if category_id:
+        subcategories = SubCategory.objects.filter(
+            category_id=category_id,
+            is_active=True
+        ).values('id', 'name').order_by('order', 'name')
+        return JsonResponse(list(subcategories), safe=False)
+    return JsonResponse([], safe=False)
+
+
+@login_required
+def get_types_by_subcategory(request):
+    """Retourne les types/modèles d'une sous-catégorie donnée"""
+    subcategory_id = request.GET.get('subcategory_id')
+    if subcategory_id:
+        types = Type.objects.filter(
+            subcategory_id=subcategory_id,
+            is_active=True
+        ).values('id', 'name').order_by('order', 'name')
+        return JsonResponse(list(types), safe=False)
+    return JsonResponse([], safe=False)
+
+
+@login_required
+def get_types_by_brand(request):
+    """Retourne les types/modèles d'une marque donnée"""
+    brand_id = request.GET.get('brand_id')
+    if brand_id:
+        types = Type.objects.filter(
+            brand_id=brand_id,
+            is_active=True
+        ).values('id', 'name', 'subcategory_id').order_by('order', 'name')
+        return JsonResponse(list(types), safe=False)
+    return JsonResponse([], safe=False)
+
+
+@login_required
+def get_types_filtered(request):
+    """Retourne les types/modèles filtrés par sous-catégorie ET/OU marque"""
+    subcategory_id = request.GET.get('subcategory_id')
+    brand_id = request.GET.get('brand_id')
+    
+    # Commencer avec tous les types actifs
+    types = Type.objects.filter(is_active=True)
+    
+    # Appliquer les filtres si fournis
+    if subcategory_id:
+        types = types.filter(subcategory_id=subcategory_id)
+    
+    if brand_id:
+        types = types.filter(brand_id=brand_id)
+    
+    # Retourner la liste
+    types_list = types.values('id', 'name', 'subcategory_id', 'brand_id').order_by('order', 'name')
+    return JsonResponse(list(types_list), safe=False)
+
+
+# ==================== Hero Slides ====================
+
+@login_required
+def hero_slide_list(request):
+    """Liste des slides hero"""
+    slides = HeroSlide.objects.all().select_related('category', 'subcategory', 'product').order_by('order', '-created_at')
+    
+    context = {
+        'slides': slides,
+        'page_title': 'Gestion des Slides Hero',
+    }
+    return render(request, 'admin_panel/hero_slide_list.html', context)
+
+
+@login_required
+def hero_slide_add(request):
+    """Ajouter un nouveau slide hero"""
+    if request.method == 'POST':
+        form = HeroSlideForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                slide = form.save()
+                messages.success(request, 'Le slide hero a été ajouté avec succès.')
+                return redirect('admin_panel:hero_slide_list')
+            except Exception as e:
+                messages.error(request, f'Erreur lors de l\'ajout du slide: {str(e)}')
+        else:
+            messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
+    else:
+        form = HeroSlideForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Ajouter un Slide Hero',
+        'action': 'Ajouter',
+    }
+    return render(request, 'admin_panel/hero_slide_form.html', context)
+
+
+@login_required
+def hero_slide_edit(request, pk):
+    """Modifier un slide hero"""
+    slide = get_object_or_404(HeroSlide, pk=pk)
+    
+    if request.method == 'POST':
+        form = HeroSlideForm(request.POST, request.FILES, instance=slide)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Le slide hero a été modifié avec succès.')
+                return redirect('admin_panel:hero_slide_list')
+            except Exception as e:
+                messages.error(request, f'Erreur lors de la modification du slide: {str(e)}')
+        else:
+            messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
+    else:
+        form = HeroSlideForm(instance=slide)
+    
+    context = {
+        'form': form,
+        'slide': slide,
+        'page_title': 'Modifier un Slide Hero',
+        'action': 'Modifier',
+    }
+    return render(request, 'admin_panel/hero_slide_form.html', context)
+
+
+@login_required
+def hero_slide_delete(request, pk):
+    """Supprimer un slide hero"""
+    slide = get_object_or_404(HeroSlide, pk=pk)
+    
+    if request.method == 'POST':
+        slide.delete()
+        messages.success(request, 'Le slide hero a été supprimé avec succès.')
+        return redirect('admin_panel:hero_slide_list')
+    
+    context = {
+        'slide': slide,
+        'page_title': 'Confirmer la suppression',
+    }
+    return render(request, 'admin_panel/hero_slide_confirm_delete.html', context)

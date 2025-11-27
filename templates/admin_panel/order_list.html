@@ -10,9 +10,30 @@
 <!-- Filtres -->
 <div class="card mb-3">
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3 align-items-end" id="filterForm">
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">Date de début</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ date_from_str }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">Date de fin</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ date_to_str }}">
+            </div>
+            <div class="col-md-2">
+                <label for="period" class="form-label">Période rapide</label>
+                <select class="form-select" id="period" name="period">
+                    <option value="" {% if not period %}selected{% endif %}>Toutes</option>
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+                    <option value="all" {% if period == 'all' %}selected{% endif %}>Personnalisée</option>
+                </select>
+            </div>
             <div class="col-md-3">
-                <select name="status" class="form-control">
+                <label for="status" class="form-label">Statut</label>
+                <select name="status" id="status" class="form-select">
                     <option value="">Tous les statuts</option>
                     <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>En attente</option>
                     <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Confirmée</option>
@@ -23,7 +44,9 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter me-1"></i>Filtrer
+                </button>
             </div>
         </form>
     </div>
@@ -75,4 +98,62 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gérer le changement de période
+    document.getElementById('period').addEventListener('change', function() {
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        const status = document.getElementById('status');
+        const form = this.form;
+        
+        if (this.value && this.value !== 'all') {
+            // Période rapide sélectionnée - construire URL propre
+            let url = '?period=' + this.value;
+            if (status.value) {
+                url += '&status=' + status.value;
+            }
+            window.location.href = url;
+        } else if (this.value === 'all') {
+            // Mode personnalisé - activer les champs de date
+            dateFrom.disabled = false;
+            dateTo.disabled = false;
+            form.submit();
+        } else {
+            // Aucune période - soumettre avec statut uniquement
+            form.submit();
+        }
+    });
+    
+    // Changer en mode personnalisé quand on modifie les dates
+    document.getElementById('date_from').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('period').value = 'all';
+            this.form.submit();
+        }
+    });
+    
+    document.getElementById('date_to').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('period').value = 'all';
+            this.form.submit();
+        }
+    });
+    
+    // Au chargement, désactiver les champs de date si période rapide active
+    window.addEventListener('DOMContentLoaded', function() {
+        const period = document.getElementById('period');
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        
+        if (period.value && period.value !== 'all' && period.value !== '') {
+            dateFrom.value = '';
+            dateTo.value = '';
+            dateFrom.disabled = true;
+            dateTo.disabled = true;
+        }
+    });
+</script>
 {% endblock %}

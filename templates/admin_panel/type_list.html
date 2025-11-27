@@ -14,7 +14,7 @@
 <div class="card mb-3">
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="search" class="form-label">Rechercher</label>
                 <input type="text" 
                        class="form-control" 
@@ -23,7 +23,18 @@
                        placeholder="Nom ou description..."
                        value="{{ search }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label for="brand" class="form-label">Marque</label>
+                <select class="form-select" id="brand" name="brand">
+                    <option value="">Toutes</option>
+                    {% for b in brands %}
+                        <option value="{{ b.id }}" {% if brand_id == b.id|stringformat:"s" %}selected{% endif %}>
+                            {{ b.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label for="category" class="form-label">Catégorie</label>
                 <select class="form-select" id="category" name="category">
                     <option value="">Toutes</option>
@@ -72,6 +83,7 @@
                 <thead>
                     <tr>
                         <th>Nom</th>
+                        <th>Marque</th>
                         <th>Sous-catégorie</th>
                         <th>Catégorie</th>
                         <th>Ordre</th>
@@ -83,6 +95,13 @@
                     {% for type in types %}
                     <tr>
                         <td><strong>{{ type.name }}</strong></td>
+                        <td>
+                            {% if type.brand %}
+                                {{ type.brand.name }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                         <td>{{ type.subcategory.name }}</td>
                         <td>{{ type.subcategory.category.name }}</td>
                         <td>{{ type.order }}</td>
@@ -104,7 +123,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">Aucun type</td>
+                        <td colspan="7" class="text-center">Aucun type</td>
                     </tr>
                     {% endfor %}
                 </tbody>

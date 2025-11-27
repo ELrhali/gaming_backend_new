@@ -175,9 +175,22 @@
             </div>
             <div class="row g-3">
                 <div class="col-12 col-md-6 mb-3">
-                    <label for="{{ form.type.id_for_label }}" class="form-label">Type</label>
-                    {{ form.type }}
+                    <label for="{{ form.brand.id_for_label }}" class="form-label">
+                        <i class="bi bi-building"></i> Marque
+                    </label>
+                    {{ form.brand }}
                 </div>
+                <div class="col-12 col-md-6 mb-3">
+                    <label for="{{ form.type.id_for_label }}" class="form-label">
+                        <i class="bi bi-tag"></i> Modèle
+                    </label>
+                    {{ form.type }}
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> Sélectionnez d'abord une marque
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3">
                 <div class="col-12 col-md-6 mb-3">
                     <label for="{{ form.collection.id_for_label }}" class="form-label">Collection</label>
                     {{ form.collection }}
@@ -255,10 +268,11 @@
             <h5 class="mb-3 mt-4">ℹ️ Autres informations</h5>
             <div class="row g-3">
                 <div class="col-12 col-sm-6 col-lg-4 mb-3">
-                    <label for="{{ form.brand.id_for_label }}" class="form-label">
-                        <i class="bi bi-building"></i> Marque
+                    <label for="{{ form.brand_text.id_for_label }}" class="form-label">
+                        <i class="bi bi-text-left"></i> Marque (texte - deprecated)
                     </label>
-                    {{ form.brand }}
+                    {{ form.brand_text }}
+                    <div class="form-text text-muted small">Utiliser le sélecteur de marque ci-dessus</div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-4 mb-3">
                     <label for="{{ form.warranty.id_for_label }}" class="form-label">
@@ -483,6 +497,151 @@ function removeSpec(button) {
         row.querySelectorAll('input').forEach(input => input.value = '');
     }
 }
+
+// ============ FILTRAGE DYNAMIQUE - CHARGEMENT VIA AJAX ============
+(function() {
+    // Récupérer les éléments du formulaire
+    const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
+    const subcategorySelect = document.getElementById('{{ form.subcategory.id_for_label }}');
+    const brandSelect = document.getElementById('{{ form.brand.id_for_label }}');
+    const typeSelect = document.getElementById('{{ form.type.id_for_label }}');
+    
+    // Sauvegarder les valeurs initiales pour l'édition
+    const initialSubcategory = subcategorySelect ? subcategorySelect.value : '';
+    const initialType = typeSelect ? typeSelect.value : '';
+    
+    // Vider les dropdowns au départ (sauf si en mode édition avec valeurs)
+    {% if not product %}
+    if (subcategorySelect) {
+        subcategorySelect.innerHTML = '<option value="">Sélectionnez d\'abord une catégorie</option>';
+        subcategorySelect.disabled = true;
+    }
+    if (typeSelect) {
+        typeSelect.innerHTML = '<option value="">Sélectionnez d\'abord une marque</option>';
+        typeSelect.disabled = true;
+    }
+    {% endif %}
+    
+    // Function to load subcategories via AJAX
+    function loadSubcategories(categoryId, selectedValue = '') {
+        if (!subcategorySelect) return;
+        
+        if (!categoryId) {
+            subcategorySelect.innerHTML = '<option value="">Sélectionnez d\'abord une catégorie</option>';
+            subcategorySelect.disabled = true;
+            loadTypes('', '', ''); // Clear types too
+            return;
+        }
+        
+        // Show loading state
+        subcategorySelect.innerHTML = '<option value="">Chargement...</option>';
+        subcategorySelect.disabled = true;
+        
+        // Fetch subcategories for this category
+        fetch(`/admin-panel/ajax/subcategories-by-category/?category_id=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">---------</option>';
+                
+                data.forEach(sub => {
+                    const opt = new Option(sub.name, sub.id);
+                    subcategorySelect.add(opt);
+                });
+                
+                subcategorySelect.disabled = false;
+                
+                // Restore selection if provided
+                if (selectedValue && data.some(s => s.id == selectedValue)) {
+                    subcategorySelect.value = selectedValue;
+                }
+                
+                // Reload types after subcategory change
+                loadTypes(subcategorySelect.value, brandSelect ? brandSelect.value : '', '');
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des sous-catégories:', error);
+                subcategorySelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+    
+    // Function to load types via AJAX (filtered by subcategory AND/OR brand)
+    function loadTypes(subcategoryId, brandId, selectedValue = '') {
+        if (!typeSelect) return;
+        
+        if (!subcategoryId && !brandId) {
+            typeSelect.innerHTML = '<option value="">Sélectionnez une marque ou sous-catégorie</option>';
+            typeSelect.disabled = true;
+            return;
+        }
+        
+        // Show loading state
+        typeSelect.innerHTML = '<option value="">Chargement...</option>';
+        typeSelect.disabled = true;
+        
+        // Build query parameters
+        let url = '/admin-panel/ajax/types-filtered/?';
+        if (subcategoryId) url += `subcategory_id=${subcategoryId}&`;
+        if (brandId) url += `brand_id=${brandId}`;
+        
+        // Fetch types
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                typeSelect.innerHTML = '<option value="">---------</option>';
+                
+                data.forEach(type => {
+                    const opt = new Option(type.name, type.id);
+                    typeSelect.add(opt);
+                });
+                
+                typeSelect.disabled = false;
+                
+                // Restore selection if provided
+                if (selectedValue && data.some(t => t.id == selectedValue)) {
+                    typeSelect.value = selectedValue;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des types:', error);
+                typeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+    
+    // Event listeners
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            loadSubcategories(this.value, '');
+        });
+    }
+    
+    if (subcategorySelect) {
+        subcategorySelect.addEventListener('change', function() {
+            loadTypes(this.value, brandSelect ? brandSelect.value : '', '');
+        });
+    }
+    
+    if (brandSelect) {
+        brandSelect.addEventListener('change', function() {
+            loadTypes(subcategorySelect ? subcategorySelect.value : '', this.value, '');
+        });
+    }
+    
+    // Initialize for edit mode
+    {% if product %}
+    if (categorySelect && categorySelect.value) {
+        loadSubcategories(categorySelect.value, initialSubcategory);
+    }
+    if ((subcategorySelect && subcategorySelect.value) || (brandSelect && brandSelect.value)) {
+        setTimeout(() => {
+            loadTypes(
+                subcategorySelect ? subcategorySelect.value : '',
+                brandSelect ? brandSelect.value : '',
+                initialType
+            );
+        }, 500);
+    }
+    {% endif %}
+})();
 
 // ============ VALIDATION ============
 document.addEventListener('DOMContentLoaded', function() {

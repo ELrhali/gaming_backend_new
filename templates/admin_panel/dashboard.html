@@ -11,15 +11,15 @@
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="date_from" class="form-label">Date de début</label>
                 <input type="date" class="form-control" id="date_from" name="date_from" 
-                       value="{{ date_from|date:'Y-m-d' }}">
+                       value="{{ date_from_str }}">
             </div>
             <div class="col-md-3">
                 <label for="date_to" class="form-label">Date de fin</label>
                 <input type="date" class="form-control" id="date_to" name="date_to" 
-                       value="{{ date_to|date:'Y-m-d' }}">
+                       value="{{ date_to_str }}">
             </div>
             <div class="col-md-4">
                 <label for="period" class="form-label">Période rapide</label>
@@ -110,8 +110,12 @@
             <div class="card-body">
                 <h6 class="text-muted mb-2">Période affichée</h6>
                 <p class="mb-0">
-                    <strong>Du :</strong> {{ date_from|date:"d/m/Y" }} 
-                    <strong>Au :</strong> {{ date_to|date:"d/m/Y" }}
+                    {% if date_from and date_to %}
+                        <strong>Du :</strong> {{ date_from|date:"d/m/Y" }} 
+                        <strong>Au :</strong> {{ date_to|date:"d/m/Y" }}
+                    {% else %}
+                        <em>Toutes les dates</em>
+                    {% endif %}
                 </p>
             </div>
         </div>
@@ -119,7 +123,7 @@
 </div>
 
 <!-- Graphique des ventes quotidiennes -->
-{% if daily_stats %}
+{% if has_stats %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -133,6 +137,15 @@
             </div>
         </div>
     </div>
+</div>
+{% else %}
+<div class="row mb-4">
+    {% comment %} <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Aucune donnée de commande disponible pour la période sélectionnée.
+        </div>
+    </div> {% endcomment %}
 </div>
 {% endif %}
 
@@ -223,7 +236,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if daily_stats %}
+{% if has_stats %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     const dailyData = {{ daily_stats|safe }};
@@ -310,10 +323,53 @@
 {% endif %}
 
 <script>
-    // Auto-remplir les dates selon la période sélectionnée
+    // Gérer le changement de période
     document.getElementById('period').addEventListener('change', function() {
+    document.getElementById('period').addEventListener('change', function() {
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        const form = this.form;
+        
+        // Si une période rapide est sélectionnée (pas "all"), rediriger avec SEULEMENT le paramètre period
         if (this.value !== 'all') {
-            document.querySelector('form').submit();
+            // Construire une URL propre avec SEULEMENT le paramètre period
+            window.location.href = '?period=' + this.value;
+        } else {
+            // Si "all" est sélectionné, soumettre avec les dates si elles existent
+            dateFrom.disabled = false;
+            dateTo.disabled = false;
+            form.submit();
+        }
+    });
+    
+    // Si l'utilisateur change les dates manuelles, basculer sur "all" et soumettre
+    document.getElementById('date_from').addEventListener('change', function() {
+        if (this.value) {
+            const form = this.form;
+            document.getElementById('period').value = 'all';
+            form.submit();
+        }
+    });
+    
+    document.getElementById('date_to').addEventListener('change', function() {
+        if (this.value) {
+            const form = this.form;
+            document.getElementById('period').value = 'all';
+            form.submit();
+        }
+    });
+    
+    // Au chargement de la page, masquer les champs de dates si une période rapide est active
+    window.addEventListener('DOMContentLoaded', function() {
+        const periodSelect = document.getElementById('period');
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        
+        if (periodSelect.value !== 'all') {
+            dateFrom.value = '';
+            dateTo.value = '';
+            dateFrom.disabled = true;
+            dateTo.disabled = true;
         }
     });
 </script>

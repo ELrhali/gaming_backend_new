@@ -308,13 +308,25 @@
                         
                         <li class="nav-item">
                             <a class="nav-link {% if 'type' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_panel:type_list' %}">
-                                <i class="bi bi-tags"></i> Types
+                                <i class="bi bi-tags"></i> Modèles
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'brand' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_panel:brand_list' %}">
+                                <i class="bi bi-award"></i> Marques
                             </a>
                         </li>
                         
                         <li class="nav-item">
                             <a class="nav-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_panel:product_list' %}">
                                 <i class="bi bi-box-seam"></i> Produits
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'hero_slide' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_panel:hero_slide_list' %}">
+                                <i class="bi bi-images"></i> Slides Hero
                             </a>
                         </li>
                         

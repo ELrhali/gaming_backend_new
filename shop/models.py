@@ -12,6 +12,7 @@ class Category(models.Model):
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
+    show_in_ad_slider = models.BooleanField(default=False, verbose_name="Afficher dans le slider de publicité")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -40,6 +41,7 @@ class SubCategory(models.Model):
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
+    is_essential = models.BooleanField(default=False, verbose_name="Sous-catégorie essentielle")
     show_on_homepage = models.BooleanField(default=False, verbose_name="Afficher sur la page d'accueil")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -58,12 +60,41 @@ class SubCategory(models.Model):
         super().save(*args, **kwargs)
 
 
+class Brand(models.Model):
+    """
+    Marque de produits
+    """
+    name = models.CharField(max_length=200, unique=True, verbose_name="Nom")
+    slug = models.SlugField(max_length=200, unique=True)
+    logo = models.ImageField(upload_to='brands/', blank=True, null=True, verbose_name="Logo")
+    description = models.TextField(blank=True, verbose_name="Description")
+    website = models.URLField(blank=True, verbose_name="Site web")
+    order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
+    is_active = models.BooleanField(default=True, verbose_name="Actif")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Marque"
+        verbose_name_plural = "Marques"
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
 class Type(models.Model):
     """
-    Type/Marque de produit: Carte Mère AMD, Carte Mère Intel, GeForce GTX, etc.
+    Modèle de produit lié à une marque: ROG Strix (ASUS), Gaming X (MSI), etc.
     """
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='types', null=True, blank=True, verbose_name="Marque")
     subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='types', verbose_name="Sous-catégorie")
-    name = models.CharField(max_length=200, verbose_name="Nom")
+    name = models.CharField(max_length=200, verbose_name="Nom du modèle")
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
@@ -72,12 +103,14 @@ class Type(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Type"
-        verbose_name_plural = "Types"
+        verbose_name = "Modèle"
+        verbose_name_plural = "Modèles"
         ordering = ['order', 'name']
 
     def __str__(self):
-        return f"{self.subcategory.name} - {self.name}"
+        if self.brand:
+            return f"{self.brand.name} - {self.name}"
+        return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -138,6 +171,8 @@ class Product(models.Model):
     subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, related_name='products', verbose_name="Sous-catégorie")
     type = models.ForeignKey(Type, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name="Type")
     collection = models.ForeignKey(Collection, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name="Collection")
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name="Marque")
+    brand_text = models.CharField(max_length=100, blank=True, verbose_name="Marque (texte)")
     
     # Prix et stock
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Prix")
@@ -149,6 +184,7 @@ class Product(models.Model):
     is_bestseller = models.BooleanField(default=False, verbose_name="Best Seller")
     is_featured = models.BooleanField(default=False, verbose_name="Produit en vedette")
     is_new = models.BooleanField(default=False, verbose_name="Nouveau")
+    show_in_ad_slider = models.BooleanField(default=False, verbose_name="Afficher dans le slider de publicité")
     
     # Images
     main_image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Image principale (deprecated)")
@@ -159,7 +195,6 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     # Autres attributs (peut être étendu)
-    brand = models.CharField(max_length=100, blank=True, verbose_name="Marque")
     warranty = models.CharField(max_length=200, blank=True, verbose_name="Garantie")
     weight = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, verbose_name="Poids (kg)")
 
@@ -240,3 +275,104 @@ class ProductSpecification(models.Model):
 
     def __str__(self):
         return f"{self.key}: {self.value}"
+
+
+class HeroSlide(models.Model):
+    """
+    Slides pour le Hero Slider de la page d'accueil
+    """
+    SLIDE_TYPE_CHOICES = [
+        ('category', 'Catégorie'),
+        ('subcategory', 'Sous-catégorie'),
+        ('product', 'Produit'),
+    ]
+    
+    title = models.CharField(max_length=200, blank=True, verbose_name="Titre", help_text="Titre affiché sur le slide (optionnel)")
+    description = models.TextField(blank=True, verbose_name="Description", help_text="Description affichée sur le slide")
+    slide_type = models.CharField(max_length=20, choices=SLIDE_TYPE_CHOICES, verbose_name="Type de slide")
+    
+    # Relations - Un seul de ces champs doit être rempli selon le type
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True, related_name='hero_slides', verbose_name="Catégorie")
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, null=True, blank=True, related_name='hero_slides', verbose_name="Sous-catégorie")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='hero_slides', verbose_name="Produit")
+    
+    # Image personnalisée (optionnel - sinon utilise l'image de la catégorie/produit)
+    custom_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Image personnalisée", help_text="Laissez vide pour utiliser l'image du produit/catégorie")
+    
+    # Paramètres
+    order = models.IntegerField(default=0, verbose_name="Ordre d'affichage", help_text="Plus petit = affiché en premier")
+    is_active = models.BooleanField(default=True, verbose_name="Actif", help_text="Désactiver pour masquer temporairement")
+    
+    # Dates
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Slide Hero"
+        verbose_name_plural = "Slides Hero"
+        ordering = ['order', '-created_at']
+    
+    def __str__(self):
+        return f"{self.get_slide_type_display()} - {self.title}"
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Vérifier qu'un seul champ est rempli selon le type
+        if self.slide_type == 'category' and not self.category:
+            raise ValidationError({'category': 'Vous devez sélectionner une catégorie pour ce type de slide.'})
+        if self.slide_type == 'subcategory' and not self.subcategory:
+            raise ValidationError({'subcategory': 'Vous devez sélectionner une sous-catégorie pour ce type de slide.'})
+        if self.slide_type == 'product' and not self.product:
+            raise ValidationError({'product': 'Vous devez sélectionner un produit pour ce type de slide.'})
+        
+        # Vérifier que les autres champs sont vides
+        if self.slide_type == 'category':
+            if self.subcategory or self.product:
+                raise ValidationError('Seule la catégorie doit être sélectionnée pour ce type de slide.')
+        elif self.slide_type == 'subcategory':
+            if self.category or self.product:
+                raise ValidationError('Seule la sous-catégorie doit être sélectionnée pour ce type de slide.')
+        elif self.slide_type == 'product':
+            if self.category or self.subcategory:
+                raise ValidationError('Seul le produit doit être sélectionné pour ce type de slide.')
+    
+    def get_image_url(self):
+        """Retourne l'URL de l'image à afficher"""
+        if self.custom_image:
+            return self.custom_image.url
+        
+        if self.slide_type == 'category' and self.category and self.category.image:
+            return self.category.image.url
+        elif self.slide_type == 'subcategory' and self.subcategory and self.subcategory.image:
+            return self.subcategory.image.url
+        elif self.slide_type == 'product' and self.product:
+            main_image = self.product.get_main_image
+            if main_image:
+                return main_image.url
+        
+        return None
+    
+    def get_link(self):
+        """Retourne le lien vers l'élément"""
+        if self.slide_type == 'category' and self.category:
+            return f"/categorie/{self.category.slug}"
+        elif self.slide_type == 'subcategory' and self.subcategory:
+            return f"/sous-categorie/{self.subcategory.slug}"
+        elif self.slide_type == 'product' and self.product:
+            return f"/produit/{self.product.slug}"
+        return "/"
+    
+    def get_display_title(self):
+        """Retourne le titre à afficher (titre personnalisé ou nom de l'élément)"""
+        if self.title:
+            return self.title
+        
+        if self.slide_type == 'category' and self.category:
+            return self.category.name
+        elif self.slide_type == 'subcategory' and self.subcategory:
+            return self.subcategory.name
+        elif self.slide_type == 'product' and self.product:
+            return self.product.name
+        
+        return "Découvrez nos produits"

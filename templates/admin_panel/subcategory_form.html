@@ -64,7 +64,7 @@
                     {% endif %}
                 </div>
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 mb-3">
                     <div class="form-check mt-4">
                         {{ form.is_active }}
                         <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
@@ -73,11 +73,20 @@
                     </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 mb-3">
+                    <div class="form-check mt-4">
+                        {{ form.is_essential }}
+                        <label class="form-check-label" for="{{ form.is_essential.id_for_label }}">
+                            Essentielle
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-3">
                     <div class="form-check mt-4">
                         {{ form.show_on_homepage }}
                         <label class="form-check-label" for="{{ form.show_on_homepage.id_for_label }}">
-                            Afficher en page d'accueil
+                            Page d'accueil
                         </label>
                     </div>
                 </div>

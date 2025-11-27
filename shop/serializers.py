@@ -2,7 +2,27 @@
 Serializers pour l'API REST
 """
 from rest_framework import serializers
-from .models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification
+from .models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification, Brand, HeroSlide
+
+
+class BrandSerializer(serializers.ModelSerializer):
+    """Serializer pour les marques"""
+    logo_url = serializers.SerializerMethodField()
+    product_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Brand
+        fields = ['id', 'name', 'slug', 'logo', 'logo_url', 'description', 'website', 'order', 'product_count']
+    
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+        return None
+    
+    def get_product_count(self, obj):
+        return obj.products.filter(status='in_stock').count()
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -48,14 +68,17 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     subcategory_name = serializers.CharField(source='subcategory.name', read_only=True)
     subcategory_slug = serializers.CharField(source='subcategory.slug', read_only=True)
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
+    brand_logo_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
         fields = [
             'id', 'reference', 'name', 'slug', 'price', 'discount_price',
             'final_price', 'discount_percentage', 'main_image_url',
-            'is_bestseller', 'is_featured', 'is_new', 'status', 'quantity',
-            'category_name', 'category_slug', 'subcategory_name', 'subcategory_slug', 'brand'
+            'is_bestseller', 'is_featured', 'is_new', 'show_in_ad_slider', 'status', 'quantity',
+            'category_name', 'category_slug', 'subcategory_name', 'subcategory_slug',
+            'brand_name', 'brand_logo_url'
         ]
     
     def get_main_image_url(self, obj):
@@ -64,6 +87,13 @@ class ProductListSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(main_image.url)
+        return None
+    
+    def get_brand_logo_url(self, obj):
+        if obj.brand and obj.brand.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.brand.logo.url)
         return None
 
 
@@ -74,9 +104,19 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     main_image_url = serializers.SerializerMethodField()
     final_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     discount_percentage = serializers.IntegerField(read_only=True)
+    
+    # Champs simples pour compatibilité frontend
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
+    subcategory_name = serializers.CharField(source='subcategory.name', read_only=True)
+    subcategory_slug = serializers.CharField(source='subcategory.slug', read_only=True)
+    brand_name = serializers.CharField(source='brand.name', read_only=True, allow_null=True)
+    
+    # Champs détaillés pour informations complètes
     category_data = serializers.SerializerMethodField()
     subcategory_data = serializers.SerializerMethodField()
     type_data = TypeSerializer(source='type', read_only=True)
+    brand_data = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -84,8 +124,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'id', 'reference', 'name', 'slug', 'meta_title', 'meta_description',
             'description', 'caracteristiques', 'price', 'discount_price',
             'final_price', 'discount_percentage', 'quantity', 'status',
-            'is_bestseller', 'is_featured', 'is_new', 'brand', 'warranty', 'weight',
+            'is_bestseller', 'is_featured', 'is_new', 'show_in_ad_slider', 'warranty', 'weight',
             'main_image_url', 'images', 'specifications',
+            'category_name', 'category_slug', 'subcategory_name', 'subcategory_slug',
+            'brand_name', 'brand_data',
             'category_data', 'subcategory_data', 'type_data', 'views_count',
             'created_at', 'updated_at'
         ]
@@ -115,6 +157,12 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                 'slug': obj.subcategory.slug
             }
         return None
+    
+    def get_brand_data(self, obj):
+        if obj.brand:
+            brand_serializer = BrandSerializer(obj.brand, context=self.context)
+            return brand_serializer.data
+        return None
 
 
 class SubCategoryListSerializer(serializers.ModelSerializer):
@@ -128,7 +176,7 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
         model = SubCategory
         fields = [
             'id', 'category', 'name', 'slug', 'image', 'image_url', 'description',
-            'order', 'show_on_homepage', 'category_name', 'category_slug',
+            'order', 'is_essential', 'show_on_homepage', 'category_name', 'category_slug',
             'product_count'
         ]
     
@@ -154,7 +202,7 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
         model = SubCategory
         fields = [
             'id', 'name', 'slug', 'image', 'image_url', 'description',
-            'order', 'show_on_homepage', 'category_data', 'types', 'product_count'
+            'order', 'is_essential', 'show_on_homepage', 'category_data', 'types', 'product_count'
         ]
     
     def get_image_url(self, obj):
@@ -185,7 +233,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = [
             'id', 'name', 'slug', 'image', 'image_url', 'description',
-            'order', 'subcategories', 'product_count'
+            'order', 'show_in_ad_slider', 'subcategories', 'product_count'
         ]
     
     def get_image_url(self, obj):
@@ -197,3 +245,68 @@ class CategorySerializer(serializers.ModelSerializer):
     
     def get_product_count(self, obj):
         return Product.objects.filter(category=obj, status='in_stock').count()
+
+
+class HeroSlideSerializer(serializers.ModelSerializer):
+    """Serializer pour les Hero Slides"""
+    image_url = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
+    target_name = serializers.SerializerMethodField()
+    badge = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    discount = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = HeroSlide
+        fields = [
+            'id', 'title', 'description', 'slide_type', 'image_url',
+            'link', 'target_name', 'badge', 'price', 'discount',
+            'order', 'is_active'
+        ]
+    
+    def get_image_url(self, obj):
+        """Retourne l'URL de l'image"""
+        image_url = obj.get_image_url()
+        if image_url:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(image_url)
+        return None
+    
+    def get_link(self, obj):
+        """Retourne le lien vers l'élément"""
+        return obj.get_link()
+    
+    def get_target_name(self, obj):
+        """Retourne le nom de l'élément ciblé"""
+        if obj.slide_type == 'category' and obj.category:
+            return obj.category.name
+        elif obj.slide_type == 'subcategory' and obj.subcategory:
+            return obj.subcategory.name
+        elif obj.slide_type == 'product' and obj.product:
+            return obj.product.name
+        return None
+    
+    def get_badge(self, obj):
+        """Retourne le badge à afficher"""
+        if obj.slide_type == 'category':
+            return '🏆 Catégorie en vedette'
+        elif obj.slide_type == 'subcategory':
+            return '📂 Sous-catégorie populaire'
+        elif obj.slide_type == 'product' and obj.product:
+            if obj.product.discount_percentage > 0:
+                return f'⚡ -{obj.product.discount_percentage}% de réduction'
+            return '⭐ Produit en promotion'
+        return None
+    
+    def get_price(self, obj):
+        """Retourne le prix pour les produits"""
+        if obj.slide_type == 'product' and obj.product:
+            return f"{float(obj.product.final_price):.0f} MAD"
+        return None
+    
+    def get_discount(self, obj):
+        """Retourne le pourcentage de réduction pour les produits"""
+        if obj.slide_type == 'product' and obj.product:
+            return obj.product.discount_percentage
+        return 0

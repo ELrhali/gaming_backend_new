@@ -5,10 +5,11 @@ from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q, Prefetch
-from .models import Category, SubCategory, Type, Product, ProductImage
+from .models import Category, SubCategory, Type, Product, ProductImage, Brand, HeroSlide
 from .serializers import (
     CategorySerializer, SubCategoryListSerializer, SubCategoryDetailSerializer,
-    TypeSerializer, ProductListSerializer, ProductDetailSerializer
+    TypeSerializer, ProductListSerializer, ProductDetailSerializer, BrandSerializer,
+    HeroSlideSerializer
 )
 
 
@@ -42,6 +43,24 @@ class SubCategoryViewSet(viewsets.ReadOnlyModelViewSet):
             return SubCategoryDetailSerializer
         return SubCategoryListSerializer
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtrer par is_essential si spécifié
+        is_essential = self.request.query_params.get('is_essential', None)
+        if is_essential and is_essential.lower() == 'true':
+            queryset = queryset.filter(is_essential=True)
+        
+        # Limiter le nombre de résultats si spécifié
+        limit = self.request.query_params.get('limit', None)
+        if limit:
+            try:
+                queryset = queryset[:int(limit)]
+            except ValueError:
+                pass
+        
+        return queryset
+    
     @action(detail=False, methods=['get'])
     def homepage(self, request):
         """
@@ -68,6 +87,18 @@ class TypeViewSet(viewsets.ReadOnlyModelViewSet):
         if subcategory_slug:
             queryset = queryset.filter(subcategory__slug=subcategory_slug)
         return queryset
+
+
+class BrandViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint pour les marques
+    
+    list: Retourne toutes les marques
+    retrieve: Retourne une marque spécifique avec ses produits
+    """
+    queryset = Brand.objects.filter(is_active=True)
+    serializer_class = BrandSerializer
+    lookup_field = 'slug'
 
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -157,7 +188,8 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(name__icontains=search) |
                 Q(description__icontains=search) |
                 Q(reference__icontains=search) |
-                Q(brand__icontains=search)
+                Q(brand__name__icontains=search) |
+                Q(brand_text__icontains=search)
             )
         
         return queryset
@@ -222,3 +254,48 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def ad_slider(self, request):
+        """
+        Retourne les catégories et produits à afficher dans le slider de publicité
+        GET /api/products/ad_slider/
+        
+        Retourne un objet avec:
+        - categories: liste des catégories avec show_in_ad_slider=True
+        - products: liste des produits avec show_in_ad_slider=True
+        """
+        from .serializers import CategorySerializer
+        
+        # Récupérer les catégories à afficher dans le slider
+        categories = Category.objects.filter(
+            is_active=True,
+            show_in_ad_slider=True
+        ).order_by('order', 'name')
+        
+        # Récupérer les produits à afficher dans le slider
+        products = self.get_queryset().filter(
+            show_in_ad_slider=True,
+            status='in_stock'
+        ).order_by('-created_at')
+        
+        category_serializer = CategorySerializer(categories, many=True, context={'request': request})
+        product_serializer = self.get_serializer(products, many=True)
+        
+        return Response({
+            'categories': category_serializer.data,
+            'products': product_serializer.data
+        })
+
+
+class HeroSlideViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint pour les Hero Slides
+    
+    list: Retourne tous les slides actifs pour le hero slider
+    """
+    queryset = HeroSlide.objects.filter(is_active=True).select_related(
+        'category', 'subcategory', 'product'
+    ).order_by('order', '-created_at')
+    serializer_class = HeroSlideSerializer
+

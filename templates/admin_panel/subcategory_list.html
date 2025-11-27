@@ -50,6 +50,14 @@
                     <option value="no" {% if homepage == 'no' %}selected{% endif %}>Non</option>
                 </select>
             </div>
+            <div class="col-md-2">
+                <label for="essential" class="form-label">Essentielle</label>
+                <select class="form-select" id="essential" name="essential">
+                    <option value="">Tous</option>
+                    <option value="yes" {% if essential == 'yes' %}selected{% endif %}>Oui</option>
+                    <option value="no" {% if essential == 'no' %}selected{% endif %}>Non</option>
+                </select>
+            </div>
             <div class="col-md-12">
                 <button type="submit" class="btn btn-primary me-2">
                     <i class="bi bi-filter me-1"></i>Filtrer
@@ -74,6 +82,7 @@
                         <th>Ordre</th>
                         <th>Types</th>
                         <th>Statut</th>
+                        <th>Essentielle</th>
                         <th>Page d'accueil</th>
                         <th>Actions</th>
                     </tr>
@@ -100,6 +109,13 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if subcategory.is_essential %}
+                                <span class="badge bg-warning"><i class="bi bi-star-fill"></i> Oui</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">Non</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if subcategory.show_on_homepage %}
                                 <span class="badge bg-primary"><i class="bi bi-house-check"></i> Oui</span>
                             {% else %}
@@ -117,7 +133,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center">Aucune sous-catégorie</td>
+                        <td colspan="9" class="text-center">Aucune sous-catégorie</td>
                     </tr>
                     {% endfor %}
                 </tbody>

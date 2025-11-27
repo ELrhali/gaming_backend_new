@@ -1,0 +1,177 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">{{ page_title }}</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:hero_slide_list' %}">Slides Hero</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info">
+                        <strong>💡 Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Sélectionnez d'abord le <strong>Type de slide</strong></li>
+                            <li>Ensuite, choisissez <strong>UN SEUL</strong> élément correspondant (catégorie, sous-catégorie ou produit)</li>
+                            <li>Le <strong>titre</strong> est optionnel - si vide, le nom de l'élément sera affiché</li>
+                            <li>L'<strong>image</strong> sera automatiquement celle de l'élément (sauf si vous uploadez une image personnalisée)</li>
+                            <li><strong>Cliquer sur l'image</strong> dans le slider redirigera vers l'élément sélectionné</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Titre du slide</label>
+                        {{ form.title }}
+                        <small class="form-text text-muted">Laissez vide pour utiliser le nom de l'élément sélectionné</small>
+                        {% if form.title.errors %}
+                            <div class="text-danger">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.slide_type.id_for_label }}" class="form-label">Type de slide *</label>
+                        {{ form.slide_type }}
+                        {% if form.slide_type.errors %}
+                            <div class="text-danger">{{ form.slide_type.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="category-field">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Catégorie</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="subcategory-field">
+                        <label for="{{ form.subcategory.id_for_label }}" class="form-label">Sous-catégorie</label>
+                        {{ form.subcategory }}
+                        {% if form.subcategory.errors %}
+                            <div class="text-danger">{{ form.subcategory.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="product-field">
+                        <label for="{{ form.product.id_for_label }}" class="form-label">Produit</label>
+                        {{ form.product }}
+                        {% if form.product.errors %}
+                            <div class="text-danger">{{ form.product.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.custom_image.id_for_label }}" class="form-label">Image personnalisée (optionnel)</label>
+                        {{ form.custom_image }}
+                        <div class="form-text text-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>📐 Dimensions recommandées :</strong> 1920×500 pixels | 
+                            <strong>Format :</strong> JPG ou PNG | 
+                            <strong>Poids max :</strong> 200 KB
+                        </div>
+                        <small class="form-text text-muted">Laissez vide pour utiliser l'image de l'élément sélectionné</small>
+                        {% if form.custom_image.errors %}
+                            <div class="text-danger">{{ form.custom_image.errors }}</div>
+                        {% endif %}
+                        {% if slide and slide.custom_image %}
+                            <div class="mt-2">
+                                <img src="{{ slide.custom_image.url }}" alt="Image actuelle" style="max-height: 150px;" class="img-thumbnail">
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.order.id_for_label }}" class="form-label">Ordre d'affichage *</label>
+                            {{ form.order }}
+                            <small class="form-text text-muted">Plus petit = affiché en premier</small>
+                            {% if form.order.errors %}
+                                <div class="text-danger">{{ form.order.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label d-block">Statut</label>
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Actif (visible sur le site)
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <div class="text-danger">{{ form.is_active.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'admin_panel:hero_slide_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {{ action }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slideTypeField = document.getElementById('{{ form.slide_type.id_for_label }}');
+    const categoryField = document.getElementById('category-field');
+    const subcategoryField = document.getElementById('subcategory-field');
+    const productField = document.getElementById('product-field');
+    
+    function updateFieldsVisibility() {
+        const selectedType = slideTypeField.value;
+        
+        categoryField.style.display = 'none';
+        subcategoryField.style.display = 'none';
+        productField.style.display = 'none';
+        
+        if (selectedType === 'category') {
+            categoryField.style.display = 'block';
+        } else if (selectedType === 'subcategory') {
+            subcategoryField.style.display = 'block';
+        } else if (selectedType === 'product') {
+            productField.style.display = 'block';
+        }
+    }
+    
+    slideTypeField.addEventListener('change', updateFieldsVisibility);
+    updateFieldsVisibility();
+});
+</script>
+{% endblock %}
