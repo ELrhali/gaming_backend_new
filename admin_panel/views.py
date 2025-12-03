@@ -109,7 +109,8 @@ def dashboard(request):
     total_orders = orders_query.count()
     pending_orders = orders_query.filter(status='pending').count()
     confirmed_orders = orders_query.filter(status='confirmed').count()
-    delivered_orders = orders_query.filter(status='delivered').count()
+    # Compter les livraisons réellement livrées (Delivery.status='delivered') pour les commandes filtrées
+    delivered_orders = Delivery.objects.filter(order__in=orders_query, status='delivered').count()
     cancelled_orders = orders_query.filter(status='cancelled').count()
     
     # Revenus
