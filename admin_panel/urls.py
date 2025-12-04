@@ -40,6 +40,8 @@ urlpatterns = [
     path('products/add/', views.product_add, name='product_add'),
     path('products/<int:pk>/edit/', views.product_edit, name='product_edit'),
     path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
+    path('products/import/', views.product_import, name='product_import'),
+    path('products/images-import/', views.product_images_import, name='product_images_import'),
     path('product/image/<int:pk>/delete/', views.product_image_delete, name='product_image_delete'),
     
     # Commandes

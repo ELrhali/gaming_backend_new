@@ -1,0 +1,167 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Importation des Images de Produits{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-images me-2"></i>Importation des Images de Produits
+                    </h5>
+                    <a href="{% url 'admin_panel:product_list' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Retour aux produits
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Afficher les messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="white-space: pre-line;">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Statistiques -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-primary">{{ stats.products }}</h3>
+                                    <p class="text-muted mb-0">Total Produits</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-success">{{ stats.products_with_images }}</h3>
+                                    <p class="text-muted mb-0">Produits avec Images</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-info">{{ stats.total_images }}</h3>
+                                    <p class="text-muted mb-0">Total Images</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Instructions</h6>
+                        <p class="mb-2">Ce formulaire permet d'importer automatiquement les images de vos produits depuis un dossier sur votre ordinateur.</p>
+                        <hr>
+                        <p class="mb-1"><strong>Structure attendue du dossier :</strong></p>
+                        <ul class="mb-2">
+                            <li><code>Dossier principal/</code>
+                                <ul>
+                                    <li><code>Nom du Produit/</code> (doit correspondre au nom dans la base de données)
+                                        <ul>
+                                            <li><code>Référence du Produit/</code> (ex: BT000050)
+                                                <ul>
+                                                    <li><code>Image/</code> - Contient l'image principale du produit</li>
+                                                    <li><code>Menu/</code> - Contient les images supplémentaires du produit</li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p class="mb-1"><strong>Exemple de chemin :</strong></p>
+                        <code>C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang</code>
+                        <p class="mt-2 mb-0"><small class="text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            La recherche des produits est insensible à la casse (majuscules/minuscules).
+                        </small></p>
+                    </div>
+
+                    <!-- Formulaire d'importation -->
+                    <form method="post" id="importForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="images_path" class="form-label">
+                                <i class="fas fa-folder-open me-1"></i>Chemin du dossier d'images
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="images_path" 
+                                   name="images_path" 
+                                   placeholder="C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang"
+                                   value="C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang"
+                                   required>
+                            <small class="form-text text-muted">
+                                Entrez le chemin complet du dossier contenant les sous-dossiers des produits
+                            </small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary" id="importBtn">
+                                <i class="fas fa-upload me-2"></i>Démarrer l'importation
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Logs détaillés (si disponibles) -->
+                    {% if import_logs %}
+                    <div class="mt-4">
+                        <div class="card">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>Logs d'importation détaillés
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                                    {% for log in import_logs %}
+                                        <div class="mb-1">{{ log }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .alert {
+        border-radius: 0.5rem;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.9em;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+<script>
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('importBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importation en cours...';
+});
+</script>
+{% endblock %}

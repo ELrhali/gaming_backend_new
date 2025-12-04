@@ -1,0 +1,370 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Importer des Produits{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-file-excel text-success"></i>
+                        Importer des Produits depuis Excel
+                    </h1>
+                    <p class="text-muted mt-2">
+                        Importez plusieurs produits en une seule fois avec toutes leurs relations (catégories, sous-catégories, marques, types, caractéristiques)
+                    </p>
+                </div>
+                <a href="{% url 'admin_panel:product_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour aux Produits
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div style="white-space: pre-line;">{{ message }}</div>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistiques actuelles -->
+    <div class="row mb-4">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Produits
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.products }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Catégories
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.categories }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Sous-catégories
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.subcategories }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Marques
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.brands }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tag fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Types
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.types }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cubes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'importation -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-upload"></i> Uploader un Fichier Excel
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="importForm">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="excel_file" class="font-weight-bold">
+                                <i class="fas fa-file-excel text-success"></i> Fichier Excel
+                            </label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="excel_file" name="excel_file" 
+                                       accept=".xlsx,.xls" required>
+                                <label class="custom-file-label" for="excel_file">Choisir un fichier...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Formats acceptés: .xlsx, .xls (taille max: 10 MB)
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6 class="font-weight-bold">
+                                <i class="fas fa-info-circle"></i> Structure du Fichier Excel (20 colonnes)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Colonnes Obligatoires (7) :</strong></p>
+                                    <ol class="mb-0 pl-3" style="font-size: 0.9rem;">
+                                        <li><strong>Référence *</strong></li>
+                                        <li><strong>Nom du produit *</strong></li>
+                                        <li><strong>Catégorie *</strong></li>
+                                        <li><strong>Sous-catégorie *</strong></li>
+                                        <li><strong>Prix (DH) *</strong></li>
+                                        <li><strong>Quantité *</strong></li>
+                                        <li><strong>Description *</strong></li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Colonnes Optionnelles (13) :</strong></p>
+                                    <ol start="8" class="mb-0 pl-3" style="font-size: 0.9rem;">
+                                        <li>Marque</li>
+                                        <li>Type</li>
+                                        <li>Collection</li>
+                                        <li>Prix Promo (DH)</li>
+                                        <li>Caractéristiques</li>
+                                        <li>Garantie</li>
+                                        <li>Poids (kg)</li>
+                                        <li>Meta Titre SEO</li>
+                                        <li>Meta Description SEO</li>
+                                        <li>Best Seller</li>
+                                        <li>En vedette</li>
+                                        <li>Nouveau</li>
+                                        <li>Statut</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <p class="mb-0 text-muted" style="font-size: 0.85rem;">
+                                <i class="fas fa-check-circle text-success"></i> 
+                                Utilisez exactement ces noms de colonnes comme dans le fichier <strong>data_product.xlsx</strong>
+                            </p>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6 class="font-weight-bold">
+                                <i class="fas fa-exclamation-triangle"></i> Gestion Automatique
+                            </h6>
+                            <ul class="mb-0 pl-3">
+                                <li><strong>Déduplication:</strong> Les produits avec une référence existante seront ignorés</li>
+                                <li><strong>Marques/Types/Collections:</strong> Créés automatiquement s'ils n'existent pas</li>
+                                <li><strong>Catégories/Sous-catégories:</strong> Doivent exister dans la base de données</li>
+                                <li><strong>Normalisation:</strong> Les noms sont automatiquement normalisés (majuscules/minuscules)</li>
+                                <li><strong>Caractéristiques:</strong> Parsées automatiquement depuis le format "• Clé: Valeur"</li>
+                                <li><strong>Validation:</strong> Les lignes avec données manquantes sont ignorées</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-success btn-lg btn-block" id="submitBtn">
+                                <i class="fas fa-cloud-upload-alt"></i> 
+                                Importer les Produits
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Exemple de structure -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-table"></i> Exemple de Structure du Fichier Excel (data_product.xlsx)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="overflow-x: auto;">
+                        <table class="table table-bordered table-sm" style="font-size: 0.85rem;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Référence *</th>
+                                    <th>Nom du produit *</th>
+                                    <th>Catégorie *</th>
+                                    <th>Sous-catégorie *</th>
+                                    <th>Marque</th>
+                                    <th>Type</th>
+                                    <th>Collection</th>
+                                    <th>Prix (DH) *</th>
+                                    <th>Prix Promo (DH)</th>
+                                    <th>Quantité *</th>
+                                    <th>Description *</th>
+                                    <th>Caractéristiques</th>
+                                    <th>Garantie</th>
+                                    <th>Poids (kg)</th>
+                                    <th>Meta Titre SEO</th>
+                                    <th>Meta Description SEO</th>
+                                    <th>Best Seller</th>
+                                    <th>En vedette</th>
+                                    <th>Nouveau</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>AL000000</td>
+                                    <td>Alimentation Be Quiet! System Power 10 850W</td>
+                                    <td>Composants</td>
+                                    <td>Alimentations</td>
+                                    <td>Be Quiet!</td>
+                                    <td>System Power 10</td>
+                                    <td>Gaming Pro</td>
+                                    <td>850.00</td>
+                                    <td>799.00</td>
+                                    <td>20</td>
+                                    <td>Alimentation ATX 850W certifiée 80 PLUS Bronze</td>
+                                    <td>• Puissance: 850 Watts<br>• Certification: 80 PLUS Bronze<br>• Modulaire: Non<br>• Ventilateur: 120mm</td>
+                                    <td>2 ans</td>
+                                    <td>1.8</td>
+                                    <td>Alimentation Be Quiet! 850W Gaming</td>
+                                    <td>Alimentation PC gaming Be Quiet! System Power 10 850W 80 PLUS Bronze</td>
+                                    <td>Non</td>
+                                    <td>Oui</td>
+                                    <td>Non</td>
+                                    <td>en stock</td>
+                                </tr>
+                                <tr>
+                                    <td>BT000000</td>
+                                    <td>Boîtier NZXT H510 Elite</td>
+                                    <td>Composants</td>
+                                    <td>Boîtiers PC</td>
+                                    <td>NZXT</td>
+                                    <td>H510 Elite</td>
+                                    <td>RGB Elite</td>
+                                    <td>1500.00</td>
+                                    <td></td>
+                                    <td>10</td>
+                                    <td>Boîtier PC gaming avec panneau vitré et RGB</td>
+                                    <td>• Format: Moyen Tour<br>• Panneau: Verre trempé<br>• RGB: Oui<br>• USB: 2x USB 3.1</td>
+                                    <td>2 ans</td>
+                                    <td>6.5</td>
+                                    <td>Boîtier NZXT H510 Elite RGB</td>
+                                    <td>Boîtier gaming NZXT H510 Elite avec panneau vitré et éclairage RGB</td>
+                                    <td>Oui</td>
+                                    <td>Oui</td>
+                                    <td>Non</td>
+                                    <td>en stock</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <h6 class="font-weight-bold mb-2">
+                            <i class="fas fa-lightbulb"></i> Conseils Importants
+                        </h6>
+                        <ul class="mb-0 pl-3" style="font-size: 0.9rem;">
+                            <li><strong>Colonnes obligatoires (7)</strong>: Référence *, Nom du produit *, Catégorie *, Sous-catégorie *, Prix (DH) *, Quantité *, Description *</li>
+                            <li><strong>Colonnes optionnelles (13)</strong>: Toutes les autres colonnes peuvent être vides</li>
+                            <li><strong>Format Caractéristiques</strong>: Utilisez "• Nom: Valeur" sur plusieurs lignes (chaque ligne = 1 caractéristique)</li>
+                            <li><strong>Prix Promo</strong>: Laissez vide si pas de promotion</li>
+                            <li><strong>Booléens</strong>: Utilisez "Oui" ou "Non" (ou "True"/"False", "1"/"0")</li>
+                            <li><strong>Statut</strong>: en stock, rupture, précommande, ou discontinué</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+    
+    #submitBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .alert ul {
+        font-size: 0.9rem;
+    }
+</style>
+
+<script>
+    // Afficher le nom du fichier sélectionné
+    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+        var fileName = e.target.files[0].name;
+        var nextSibling = e.target.nextElementSibling;
+        nextSibling.innerText = fileName;
+    });
+    
+    // Animation de chargement lors de la soumission
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        var btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importation en cours...';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

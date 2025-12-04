@@ -350,6 +350,24 @@
                         
                         <li class="nav-item">
                             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                                <span>IMPORTATION</span>
+                            </h6>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_panel:product_import' %}">
+                                <i class="bi bi-file-earmark-excel"></i> Produits (Excel)
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'product_images_import' %}active{% endif %}" href="{% url 'admin_panel:product_images_import' %}">
+                                <i class="bi bi-cloud-upload"></i> Images Produits
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                                 <span>SYSTÈME</span>
                             </h6>
                         </li>

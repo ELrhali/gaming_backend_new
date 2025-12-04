@@ -12,6 +12,9 @@ import json
 from shop.models import Category, SubCategory, Type, Product, ProductImage, ProductSpecification, Brand, HeroSlide
 from orders.models import Order, OrderItem, Delivery
 from .forms import CategoryForm, SubCategoryForm, TypeForm, ProductForm, OrderStatusForm, DeliveryForm, HeroSlideForm
+from .excel_import import ExcelImporter
+import os
+from django.conf import settings
 
 
 # ==================== Authentification ====================
@@ -506,28 +509,97 @@ def brand_delete(request, pk):
 
 @login_required
 def product_list(request):
-    products = Product.objects.select_related('category', 'subcategory').prefetch_related('images').order_by('-created_at')
+    products = Product.objects.select_related('category', 'subcategory', 'brand', 'type').prefetch_related('images').order_by('-created_at')
+    
+    # Récupérer tous les éléments pour les filtres
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    subcategories = SubCategory.objects.filter(is_active=True).order_by('name')
+    brands = Brand.objects.filter(is_active=True).order_by('name')
+    types = Type.objects.filter(is_active=True).order_by('name')
     
     # Filtres
     category_id = request.GET.get('category')
     subcategory_id = request.GET.get('subcategory')
+    brand_id = request.GET.get('brand')
+    type_id = request.GET.get('type')
     search = request.GET.get('search')
+    status = request.GET.get('status')
+    stock_status = request.GET.get('stock_status')
+    is_bestseller = request.GET.get('is_bestseller')
+    is_featured = request.GET.get('is_featured')
+    is_new = request.GET.get('is_new')
     
+    # Appliquer les filtres
     if category_id:
         products = products.filter(category_id=category_id)
+        # Filtrer les sous-catégories par catégorie sélectionnée
+        subcategories = subcategories.filter(category_id=category_id)
+    
     if subcategory_id:
         products = products.filter(subcategory_id=subcategory_id)
+    
+    if brand_id:
+        products = products.filter(brand_id=brand_id)
+    
+    if type_id:
+        products = products.filter(type_id=type_id)
+    
     if search:
         products = products.filter(
             Q(name__icontains=search) | 
             Q(reference__icontains=search) | 
-            Q(description__icontains=search)
+            Q(description__icontains=search) |
+            Q(brand__name__icontains=search)
         )
     
-    categories = Category.objects.all()
+    if status:
+        products = products.filter(status=status)
+    
+    # Filtre de stock
+    if stock_status == 'in_stock':
+        products = products.filter(quantity__gt=0)
+    elif stock_status == 'out_of_stock':
+        products = products.filter(quantity=0)
+    elif stock_status == 'low_stock':
+        products = products.filter(quantity__gt=0, quantity__lte=5)
+    
+    # Filtres booléens
+    if is_bestseller == 'yes':
+        products = products.filter(is_bestseller=True)
+    elif is_bestseller == 'no':
+        products = products.filter(is_bestseller=False)
+    
+    if is_featured == 'yes':
+        products = products.filter(is_featured=True)
+    elif is_featured == 'no':
+        products = products.filter(is_featured=False)
+    
+    if is_new == 'yes':
+        products = products.filter(is_new=True)
+    elif is_new == 'no':
+        products = products.filter(is_new=False)
+    
+    # Compter les résultats
+    total_count = products.count()
+    
     return render(request, 'admin_panel/product_list.html', {
         'products': products,
-        'categories': categories
+        'categories': categories,
+        'subcategories': subcategories,
+        'brands': brands,
+        'types': types,
+        'total_count': total_count,
+        # Garder les valeurs des filtres
+        'selected_category': category_id,
+        'selected_subcategory': subcategory_id,
+        'selected_brand': brand_id,
+        'selected_type': type_id,
+        'selected_status': status,
+        'selected_stock_status': stock_status,
+        'selected_is_bestseller': is_bestseller,
+        'selected_is_featured': is_featured,
+        'selected_is_new': is_new,
+        'search_query': search,
     })
 
 
@@ -1165,3 +1237,374 @@ def hero_slide_delete(request, pk):
         'page_title': 'Confirmer la suppression',
     }
     return render(request, 'admin_panel/hero_slide_confirm_delete.html', context)
+
+
+# ==================== Importation Excel ====================
+
+@login_required
+def product_import(request):
+    """Page d'importation de produits depuis Excel"""
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        
+        # Vérifier l'extension du fichier
+        if not excel_file.name.endswith(('.xlsx', '.xls')):
+            messages.error(request, 'Veuillez uploader un fichier Excel valide (.xlsx ou .xls)')
+            return redirect('admin_panel:product_import')
+        
+        # Sauvegarder temporairement le fichier
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
+            for chunk in excel_file.chunks():
+                tmp_file.write(chunk)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Importer les produits
+            importer = ExcelImporter()
+            result = importer.import_from_excel(tmp_path)
+            
+            if result['success']:
+                # Message de succès détaillé
+                success_msg = f"✅ Importation terminée avec succès!\n"
+                success_msg += f"• {result['created']} produits créés\n"
+                success_msg += f"• {result['skipped']} produits ignorés (doublons ou données manquantes)\n"
+                
+                if result['created_brands']:
+                    success_msg += f"• {len(result['created_brands'])} nouvelles marques créées: {', '.join(result['created_brands'][:5])}"
+                    if len(result['created_brands']) > 5:
+                        success_msg += f" et {len(result['created_brands']) - 5} autres"
+                    success_msg += "\n"
+                
+                if result['created_types']:
+                    success_msg += f"• {len(result['created_types'])} nouveaux types créés: {', '.join(result['created_types'][:5])}"
+                    if len(result['created_types']) > 5:
+                        success_msg += f" et {len(result['created_types']) - 5} autres"
+                    success_msg += "\n"
+                
+                if result['created_collections']:
+                    success_msg += f"• {len(result['created_collections'])} nouvelles collections créées: {', '.join(result['created_collections'])}\n"
+                
+                messages.success(request, success_msg)
+                
+                # Afficher les erreurs s'il y en a
+                if result['errors']:
+                    error_msg = "⚠️ Erreurs rencontrées:\n" + "\n".join(result['errors'][:10])
+                    if len(result['errors']) > 10:
+                        error_msg += f"\n... et {len(result['errors']) - 10} autres erreurs"
+                    messages.warning(request, error_msg)
+            else:
+                messages.error(request, f"❌ Erreur: {result['error']}")
+        
+        except Exception as e:
+            messages.error(request, f"❌ Erreur lors de l'importation: {str(e)}")
+        
+        finally:
+            # Supprimer le fichier temporaire
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+        
+        return redirect('admin_panel:product_import')
+    
+    # Statistiques actuelles
+    stats = {
+        'products': Product.objects.count(),
+        'categories': Category.objects.count(),
+        'subcategories': SubCategory.objects.count(),
+        'brands': Brand.objects.count(),
+        'types': Type.objects.count(),
+    }
+    
+    return render(request, 'admin_panel/product_import.html', {'stats': stats})
+
+
+# ==================== Importation des Images ====================
+
+@login_required
+def product_images_import(request):
+    """Page d'importation des images de produits depuis un dossier"""
+    if request.method == 'POST':
+        images_path = request.POST.get('images_path', '').strip()
+        
+        if not images_path:
+            messages.error(request, 'Veuillez fournir le chemin du dossier d\'images.')
+            return redirect('admin_panel:product_images_import')
+        
+        # Vérifier que le chemin existe
+        if not os.path.exists(images_path):
+            messages.error(request, f'Le chemin "{images_path}" n\'existe pas.')
+            return redirect('admin_panel:product_images_import')
+        
+        # Vérifier que c'est un dossier
+        if not os.path.isdir(images_path):
+            messages.error(request, f'"{images_path}" n\'est pas un dossier valide.')
+            return redirect('admin_panel:product_images_import')
+        
+        # Importer le script d'importation des images
+        import sys
+        from pathlib import Path
+        from PIL import Image
+        import shutil
+        from django.db.models.functions import Lower
+        
+        # Extensions d'images autorisées
+        IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
+        
+        def normalize_name(name):
+            """Normalise un nom pour la comparaison (minuscules, espaces supprimés)"""
+            return name.lower().strip()
+        
+        def find_product_by_name(product_name):
+            """Trouve un produit par son nom (insensible à la casse)"""
+            normalized_search = normalize_name(product_name)
+            
+            # Chercher le produit avec une correspondance exacte (insensible à la casse)
+            products = Product.objects.annotate(name_lower=Lower('name'))
+            
+            for product in products:
+                if normalize_name(product.name) == normalized_search:
+                    return product
+            
+            return None
+        
+        def get_image_files(directory):
+            """Récupère tous les fichiers images d'un dossier"""
+            if not os.path.exists(directory):
+                return []
+            
+            image_files = []
+            for file in os.listdir(directory):
+                file_path = os.path.join(directory, file)
+                if os.path.isfile(file_path):
+                    ext = os.path.splitext(file)[1].lower()
+                    if ext in IMAGE_EXTENSIONS:
+                        image_files.append(file_path)
+            
+            return sorted(image_files)
+        
+        def copy_image_to_media(source_path, product, is_main=False):
+            """Copie une image vers le dossier media et crée l'entrée en base"""
+            try:
+                # Vérifier que le fichier existe
+                if not os.path.exists(source_path):
+                    return False, f"Fichier introuvable: {source_path}"
+                
+                # Générer le nom du fichier de destination
+                filename = os.path.basename(source_path)
+                destination_subdir = 'products/gallery/'
+                
+                # Chemin relatif pour Django (depuis media/)
+                relative_path = os.path.join(destination_subdir, filename)
+                
+                # Vérifier si cette image existe déjà pour ce produit (basé sur le nom du fichier)
+                existing_image = ProductImage.objects.filter(
+                    product=product,
+                    image__icontains=filename
+                ).first()
+                
+                if existing_image:
+                    return False, f"Image déjà existante (ignorée): {filename}"
+                
+                # Ouvrir et vérifier l'image
+                try:
+                    with Image.open(source_path) as img:
+                        img.verify()
+                except Exception as e:
+                    return False, f"Image corrompue {os.path.basename(source_path)}: {e}"
+                
+                # Créer le dossier de destination s'il n'existe pas
+                media_root = os.path.join(settings.BASE_DIR, 'media', destination_subdir)
+                os.makedirs(media_root, exist_ok=True)
+                
+                # Chemin absolu pour la copie
+                destination_path = os.path.join(settings.BASE_DIR, 'media', relative_path)
+                
+                # Copier le fichier seulement s'il n'existe pas déjà
+                if not os.path.exists(destination_path):
+                    shutil.copy2(source_path, destination_path)
+                
+                # Si c'est l'image principale et qu'une image principale existe déjà, la remplacer
+                if is_main:
+                    # Supprimer l'ancienne image principale si elle existe
+                    ProductImage.objects.filter(product=product, is_main=True).delete()
+                
+                # Créer l'entrée dans la base de données
+                product_image = ProductImage.objects.create(
+                    product=product,
+                    image=relative_path,
+                    is_main=is_main,
+                    order=0 if is_main else ProductImage.objects.filter(product=product).count()
+                )
+                
+                return True, f"Image {'principale' if is_main else 'ajoutée'}: {filename}"
+                
+            except Exception as e:
+                return False, f"Erreur lors de l'import de {os.path.basename(source_path)}: {e}"
+        
+        def process_product_folder(product_folder_path):
+            """Traite un dossier de produit"""
+            product_name = os.path.basename(product_folder_path)
+            logs = []
+            
+            # Trouver le produit dans la base
+            product = find_product_by_name(product_name)
+            
+            if not product:
+                return {
+                    'status': 'not_found',
+                    'name': product_name,
+                    'logs': [f"⚠️ Produit non trouvé dans la base de données: {product_name}"]
+                }
+            
+            logs.append(f"✓ Produit trouvé: {product.reference} - {product.name}")
+            
+            # Chercher le dossier de référence (premier sous-dossier)
+            reference_folders = [d for d in os.listdir(product_folder_path) 
+                                if os.path.isdir(os.path.join(product_folder_path, d))]
+            
+            if not reference_folders:
+                return {
+                    'status': 'no_reference_folder',
+                    'name': product_name,
+                    'product': product,
+                    'logs': logs + [f"⚠️ Aucun dossier de référence trouvé"]
+                }
+            
+            # Prendre le premier dossier de référence
+            reference_folder = reference_folders[0]
+            reference_path = os.path.join(product_folder_path, reference_folder)
+            logs.append(f"📁 Dossier référence: {reference_folder}")
+            
+            # Chercher les dossiers Image et Menu (insensible à la casse)
+            image_folder = None
+            menu_folder = None
+            
+            for item in os.listdir(reference_path):
+                item_path = os.path.join(reference_path, item)
+                if os.path.isdir(item_path):
+                    item_lower = item.lower()
+                    if item_lower == 'image':
+                        image_folder = item_path
+                    elif item_lower == 'menu':
+                        menu_folder = item_path
+            
+            images_added = 0
+            
+            # Traiter l'image principale (dossier Image)
+            if image_folder:
+                image_files = get_image_files(image_folder)
+                if image_files:
+                    # Prendre la première image comme image principale
+                    success, msg = copy_image_to_media(image_files[0], product, is_main=True)
+                    if success:
+                        images_added += 1
+                        logs.append(f"✅ {msg}")
+                    else:
+                        logs.append(f"❌ {msg}")
+                else:
+                    logs.append(f"⚠️ Aucune image trouvée dans le dossier Image")
+            else:
+                logs.append(f"⚠️ Dossier 'Image' non trouvé")
+            
+            # Traiter les images supplémentaires (dossier Menu)
+            if menu_folder:
+                menu_images = get_image_files(menu_folder)
+                for image_path in menu_images:
+                    success, msg = copy_image_to_media(image_path, product, is_main=False)
+                    if success:
+                        images_added += 1
+                        logs.append(f"✅ {msg}")
+                    else:
+                        logs.append(f"❌ {msg}")
+            else:
+                logs.append(f"⚠️ Dossier 'Menu' non trouvé")
+            
+            return {
+                'status': 'success',
+                'name': product_name,
+                'product': product,
+                'images_count': images_added,
+                'logs': logs
+            }
+        
+        # Traiter tous les dossiers de produits
+        try:
+            product_folders = [
+                os.path.join(images_path, d) 
+                for d in os.listdir(images_path) 
+                if os.path.isdir(os.path.join(images_path, d))
+            ]
+            
+            # Statistiques
+            stats = {
+                'total': len(product_folders),
+                'success': 0,
+                'not_found': 0,
+                'errors': 0,
+                'total_images': 0
+            }
+            
+            not_found_products = []
+            detailed_logs = []
+            
+            # Traiter chaque dossier
+            for product_folder in product_folders:
+                try:
+                    result = process_product_folder(product_folder)
+                    
+                    if result['status'] == 'success':
+                        stats['success'] += 1
+                        stats['total_images'] += result['images_count']
+                    elif result['status'] == 'not_found':
+                        stats['not_found'] += 1
+                        not_found_products.append(result['name'])
+                    else:
+                        stats['errors'] += 1
+                    
+                    detailed_logs.extend(result['logs'])
+                    
+                except Exception as e:
+                    stats['errors'] += 1
+                    detailed_logs.append(f"❌ Erreur inattendue pour {os.path.basename(product_folder)}: {e}")
+            
+            # Message de succès
+            success_msg = f"✅ Importation terminée!\n"
+            success_msg += f"• {stats['success']}/{stats['total']} produits traités avec succès\n"
+            success_msg += f"• {stats['total_images']} images importées\n"
+            success_msg += f"• {stats['not_found']} produits non trouvés en base\n"
+            success_msg += f"• {stats['errors']} erreurs"
+            
+            messages.success(request, success_msg)
+            
+            # Afficher les produits non trouvés
+            if not_found_products:
+                warning_msg = f"⚠️ Produits non trouvés ({len(not_found_products)}):\n"
+                warning_msg += "\n".join([f"• {name}" for name in not_found_products[:10]])
+                if len(not_found_products) > 10:
+                    warning_msg += f"\n... et {len(not_found_products) - 10} autres"
+                messages.warning(request, warning_msg)
+            
+            # Sauvegarder les logs détaillés dans la session pour affichage
+            request.session['import_logs'] = detailed_logs
+            
+        except Exception as e:
+            messages.error(request, f"❌ Erreur lors de l'importation: {str(e)}")
+        
+        return redirect('admin_panel:product_images_import')
+    
+    # Récupérer les logs de la dernière importation si disponibles
+    import_logs = request.session.pop('import_logs', None)
+    
+    # Statistiques actuelles
+    stats = {
+        'products': Product.objects.count(),
+        'products_with_images': Product.objects.filter(images__isnull=False).distinct().count(),
+        'total_images': ProductImage.objects.count(),
+    }
+    
+    return render(request, 'admin_panel/product_images_import.html', {
+        'stats': stats,
+        'import_logs': import_logs
+    })
