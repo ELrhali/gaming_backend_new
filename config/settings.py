@@ -168,21 +168,51 @@ LOGIN_URL = '/admin-panel/login/'
 LOGIN_REDIRECT_URL = '/admin-panel/dashboard/'
 LOGOUT_REDIRECT_URL = '/admin-panel/login/'
 
-# Jazzmin settings - Interface admin moderne
+# Jazzmin settings - Interface admin moderne et claire
 JAZZMIN_SETTINGS = {
-    "site_title": "PC Gaming Store Admin",
-    "site_header": "PC Gaming Store",
-    "site_brand": "Gaming Admin",
+    # Titres et branding
+    "site_title": "PC Store Admin",
+    "site_header": "Administration de Gaming Store",
+    "site_brand": "PC Store Admin",
     "site_logo": None,
+    "login_logo": None,
+    "login_logo_dark": None,
+    "site_logo_classes": "img-circle",
+    "site_icon": None,
     "welcome_sign": "Bienvenue dans le panneau d'administration",
-    "copyright": "PC Gaming Store",
-    "search_model": ["shop.Product", "shop.Category", "shop.Brand"],
+    "copyright": "PC Gaming Store © 2025",
+    "search_model": ["shop.Product", "shop.Category", "shop.Brand", "orders.Order"],
     
-    # Icônes pour le menu
+    # Top Menu
+    "topmenu_links": [
+        {"name": "Accueil", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Voir le site", "url": "https://mafourniturescolaire.ma", "new_window": True},
+        {"model": "auth.User"},
+        {"app": "shop"},
+    ],
+    
+    # User Menu
+    "usermenu_links": [
+        {"name": "Voir le site", "url": "https://mafourniturescolaire.ma", "new_window": True},
+        {"model": "auth.user", "icon": "fas fa-user"},
+    ],
+    
+    # Sidebar
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    
+    # Ordre des apps dans le menu
+    "order_with_respect_to": ["shop", "orders", "auth", "admin_panel"],
+    
+    # Icônes FontAwesome pour chaque section
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        
+        "shop": "fas fa-store",
         "shop.Product": "fas fa-gamepad",
         "shop.Category": "fas fa-folder",
         "shop.SubCategory": "fas fa-folder-open",
@@ -190,68 +220,72 @@ JAZZMIN_SETTINGS = {
         "shop.Collection": "fas fa-layer-group",
         "shop.ProductModel": "fas fa-cube",
         "shop.HeroSlide": "fas fa-images",
+        
+        "orders": "fas fa-shopping-cart",
         "orders.Order": "fas fa-shopping-cart",
         "orders.OrderItem": "fas fa-list",
         "orders.Customer": "fas fa-user-circle",
         "orders.Shipping": "fas fa-truck",
     },
     
-    # Thème de couleur
-    "theme": "flatly",  # Options: cerulean, cosmo, cyborg, darkly, flatly, journal, litera, lumen, lux, materia, minty, pulse, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, yeti
+    # Labels personnalisés pour les apps
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
     
-    # Personnalisation du menu
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    
-    # Menu personnalisé
+    # Liens personnalisés dans le menu
     "custom_links": {
         "shop": [{
-            "name": "Voir le site",
-            "url": "https://mafourniturescolaire.ma",
-            "icon": "fas fa-globe",
-            "new_window": True,
+            "name": "Statistiques Produits",
+            "url": "admin:shop_product_changelist",
+            "icon": "fas fa-chart-bar",
         }]
     },
     
-    # Ordre des apps
-    "order_with_respect_to": ["shop", "orders", "auth"],
-    
-    # UI Tweaks
-    "custom_css": None,
-    "custom_js": None,
-    "show_ui_builder": False,
-    
+    # Options de formulaire
     "changeform_format": "horizontal_tabs",
     "changeform_format_overrides": {
         "auth.user": "collapsible",
-        "auth.group": "vertical_tabs"
+        "auth.group": "vertical_tabs",
+        "shop.product": "horizontal_tabs",
     },
+    
+    # Langue
+    "language_chooser": False,
 }
 
 JAZZMIN_UI_TWEAKS = {
+    # Tailles de texte
     "navbar_small_text": False,
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-primary",
+    
+    # Couleurs du thème
+    "brand_colour": "navbar-navy",
     "accent": "accent-primary",
-    "navbar": "navbar-dark",
+    "navbar": "navbar-navy navbar-dark",
     "no_navbar_border": False,
+    
+    # Barre de navigation
     "navbar_fixed": True,
     "layout_boxed": False,
     "footer_fixed": False,
+    
+    # Sidebar (menu latéral)
     "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-primary",
+    "sidebar": "sidebar-dark-navy",
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
     "sidebar_nav_child_indent": False,
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
+    "sidebar_nav_flat_style": True,
+    
+    # Thèmes
     "theme": "flatly",
-    "dark_mode_theme": "darkly",
+    "dark_mode_theme": "cyborg",
+    
+    # Classes CSS pour les boutons
     "button_classes": {
         "primary": "btn-primary",
         "secondary": "btn-secondary",
@@ -259,5 +293,8 @@ JAZZMIN_UI_TWEAKS = {
         "warning": "btn-warning",
         "danger": "btn-danger",
         "success": "btn-success"
-    }
+    },
+    
+    # Actions
+    "actions_sticky_top": True,
 }
