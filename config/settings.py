@@ -154,6 +154,23 @@ cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://1
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF settings for production
+csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://mafourniturescolaire.ma')
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',')]
+
+# Configuration pour proxy inverse (reverse proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+# Configuration CSRF pour proxy
+CSRF_COOKIE_SECURE = not DEBUG  # True en production, False en dev
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
+SESSION_COOKIE_SECURE = not DEBUG  # True en production, False en dev
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
