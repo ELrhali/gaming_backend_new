@@ -1,0 +1,31 @@
+# Commandes SSH pour installer Jazzmin sur le serveur
+
+# 1. Se connecter au serveur
+ssh mafourn2@176.9.31.158
+
+# 2. Aller dans le répertoire backend
+cd ~/backend
+
+# 3. Activer l'environnement Python
+source ~/virtualenv/backend/3.11/bin/activate
+
+# 4. Pull les derniers changements depuis GitHub
+git pull origin master
+
+# 5. Installer django-jazzmin
+pip install django-jazzmin
+
+# 6. Collecter les fichiers statiques de Jazzmin
+python manage.py collectstatic --noinput
+
+# 7. Redémarrer Gunicorn
+pkill -f gunicorn
+~/backend/start_django.sh
+
+# 8. Vérifier que Gunicorn tourne
+ps aux | grep gunicorn
+
+# 9. Tester l'accès à l'admin
+curl -I https://mafourniturescolaire.ma/django-admin/
+
+# Terminé ! Allez sur https://mafourniturescolaire.ma/django-admin/ pour voir la nouvelle interface
