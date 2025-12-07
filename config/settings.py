@@ -6,6 +6,12 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+# PyMySQL setup pour remplacer mysqlclient
+import pymysql
+pymysql.install_as_MySQLdb()
+# Forcer la version pour éviter l'erreur de version
+pymysql.version_info = (2, 2, 1, "final", 0)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +30,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',  # Doit être avant django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,7 +86,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'config.db_backend',  # Utiliser notre backend personnalisé
         'NAME': os.getenv('DB_NAME', 'pc_store_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
@@ -160,3 +167,97 @@ REST_FRAMEWORK = {
 LOGIN_URL = '/admin-panel/login/'
 LOGIN_REDIRECT_URL = '/admin-panel/dashboard/'
 LOGOUT_REDIRECT_URL = '/admin-panel/login/'
+
+# Jazzmin settings - Interface admin moderne
+JAZZMIN_SETTINGS = {
+    "site_title": "PC Gaming Store Admin",
+    "site_header": "PC Gaming Store",
+    "site_brand": "Gaming Admin",
+    "site_logo": None,
+    "welcome_sign": "Bienvenue dans le panneau d'administration",
+    "copyright": "PC Gaming Store",
+    "search_model": ["shop.Product", "shop.Category", "shop.Brand"],
+    
+    # Icônes pour le menu
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "shop.Product": "fas fa-gamepad",
+        "shop.Category": "fas fa-folder",
+        "shop.SubCategory": "fas fa-folder-open",
+        "shop.Brand": "fas fa-trademark",
+        "shop.Collection": "fas fa-layer-group",
+        "shop.ProductModel": "fas fa-cube",
+        "shop.HeroSlide": "fas fa-images",
+        "orders.Order": "fas fa-shopping-cart",
+        "orders.OrderItem": "fas fa-list",
+        "orders.Customer": "fas fa-user-circle",
+        "orders.Shipping": "fas fa-truck",
+    },
+    
+    # Thème de couleur
+    "theme": "flatly",  # Options: cerulean, cosmo, cyborg, darkly, flatly, journal, litera, lumen, lux, materia, minty, pulse, sandstone, simplex, sketchy, slate, solar, spacelab, superhero, united, yeti
+    
+    # Personnalisation du menu
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    
+    # Menu personnalisé
+    "custom_links": {
+        "shop": [{
+            "name": "Voir le site",
+            "url": "https://mafourniturescolaire.ma",
+            "icon": "fas fa-globe",
+            "new_window": True,
+        }]
+    },
+    
+    # Ordre des apps
+    "order_with_respect_to": ["shop", "orders", "auth"],
+    
+    # UI Tweaks
+    "custom_css": None,
+    "custom_js": None,
+    "show_ui_builder": False,
+    
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs"
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}

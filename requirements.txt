@@ -1,5 +1,4 @@
 Django>=4.2,<5.0
-mysqlclient>=2.2.0
 pymysql>=1.1.0
 Pillow>=10.0.0
 python-dotenv>=1.0.0
@@ -8,3 +7,6 @@ django-cors-headers>=4.3.0
 djangorestframework>=3.14.0
 gunicorn>=21.0.0
 whitenoise>=6.5.0
+django-jazzmin>=2.6.0
+pandas>=2.0.0
+openpyxl>=3.1.0
