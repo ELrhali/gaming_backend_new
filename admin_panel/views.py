@@ -1356,18 +1356,84 @@ def product_images_import(request):
             """Normalise un nom pour la comparaison (minuscules, espaces supprimés)"""
             return name.lower().strip()
         
-        def find_product_by_name(product_name):
-            """Trouve un produit par son nom (insensible à la casse)"""
-            normalized_search = normalize_name(product_name)
+        def extract_reference_from_folder_name(folder_name):
+            """Extrait le numéro de référence du nom du dossier
             
-            # Chercher le produit avec une correspondance exacte (insensible à la casse)
-            products = Product.objects.annotate(name_lower=Lower('name'))
+            Exemples:
+            - "Carte mère ASUS ROG STRIX Z690-A GAMING WIFI D4" -> "Z690-A"
+            - "Processeur Intel Core i7-12700K" -> "i7-12700K"
+            - "MSI RTX 4090 GAMING X TRIO 24G" -> "RTX 4090" ou "4090"
             
-            for product in products:
-                if normalize_name(product.name) == normalized_search:
-                    return product
+            La fonction cherche les patterns courants de références:
+            - Références avec tirets (ex: i7-12700K, RTX-4090)
+            - Références alphanumériques (ex: Z690A, RTX4090)
+            - Nombres seuls si précédés d'une marque connue
+            """
+            import re
+            
+            # Patterns de références courants
+            patterns = [
+                r'\b([A-Z0-9]+-[A-Z0-9-]+)\b',  # Format avec tirets: i7-12700K, RTX-4090
+                r'\b(RTX\s*\d{4}\s*[A-Z]*|GTX\s*\d{4}\s*[A-Z]*)\b',  # Cartes graphiques NVIDIA
+                r'\b(RX\s*\d{4}\s*[A-Z]*)\b',  # Cartes graphiques AMD
+                r'\b([iI][3579]-\d{4,5}[A-Z]{0,2})\b',  # Processeurs Intel
+                r'\b(Ryzen\s*[3579]\s*\d{4}[A-Z]{0,2})\b',  # Processeurs AMD Ryzen
+                r'\b([A-Z]\d{3,4}[A-Z]*-[A-Z0-9]+)\b',  # Format type Z690-A, B550-F
+                r'\b([A-Z]{2,}\d{3,})\b',  # Format alphanumérique: RTX4090, Z690A
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, folder_name, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
             
             return None
+        
+        def find_product_by_reference(folder_name):
+            """Trouve un produit par son numéro de référence extrait du nom du dossier
+            
+            1. Extrait la référence du nom du dossier
+            2. Cherche dans la base de données en comparant avec le champ 'reference'
+            3. Si pas trouvé, cherche dans le nom du produit
+            """
+            # Extraire la référence du nom du dossier
+            reference = extract_reference_from_folder_name(folder_name)
+            
+            if not reference:
+                # Fallback: chercher par nom complet
+                normalized_search = normalize_name(folder_name)
+                products = Product.objects.annotate(name_lower=Lower('name'))
+                for product in products:
+                    if normalize_name(product.name) == normalized_search:
+                        return product, None
+                return None, None
+            
+            # Nettoyer la référence
+            reference_clean = reference.upper().strip()
+            
+            # 1. Chercher d'abord dans le champ reference (correspondance exacte)
+            product = Product.objects.filter(reference__iexact=reference_clean).first()
+            if product:
+                return product, reference
+            
+            # 2. Chercher dans le champ reference (contient)
+            product = Product.objects.filter(reference__icontains=reference_clean).first()
+            if product:
+                return product, reference
+            
+            # 3. Chercher dans le nom du produit (contient la référence)
+            product = Product.objects.filter(name__icontains=reference).first()
+            if product:
+                return product, reference
+            
+            # 4. Fallback: chercher par nom complet du dossier
+            normalized_search = normalize_name(folder_name)
+            products = Product.objects.annotate(name_lower=Lower('name'))
+            for product in products:
+                if normalize_name(product.name) == normalized_search:
+                    return product, reference
+            
+            return None, reference
         
         def get_image_files(directory):
             """Récupère tous les fichiers images d'un dossier"""
@@ -1444,38 +1510,55 @@ def product_images_import(request):
                 return False, f"Erreur lors de l'import de {os.path.basename(source_path)}: {e}"
         
         def process_product_folder(product_folder_path):
-            """Traite un dossier de produit"""
-            product_name = os.path.basename(product_folder_path)
+            """Traite un dossier de produit
+            Structure attendue:
+            - Dossier produit (nom du produit)
+              - Sous-dossier référence (numéro de référence du produit)
+                - Image/ (contient l'image principale)
+                - Menu/ (contient les images de la galerie)
+            """
+            folder_name = os.path.basename(product_folder_path)
             logs = []
             
-            # Trouver le produit dans la base
-            product = find_product_by_name(product_name)
-            
-            if not product:
-                return {
-                    'status': 'not_found',
-                    'name': product_name,
-                    'logs': [f"⚠️ Produit non trouvé dans la base de données: {product_name}"]
-                }
-            
-            logs.append(f"✓ Produit trouvé: {product.reference} - {product.name}")
-            
-            # Chercher le dossier de référence (premier sous-dossier)
+            # Chercher le sous-dossier de référence (premier sous-dossier)
             reference_folders = [d for d in os.listdir(product_folder_path) 
                                 if os.path.isdir(os.path.join(product_folder_path, d))]
             
             if not reference_folders:
+                logs.append(f"⚠️ Aucun sous-dossier trouvé")
                 return {
                     'status': 'no_reference_folder',
-                    'name': product_name,
-                    'product': product,
-                    'logs': logs + [f"⚠️ Aucun dossier de référence trouvé"]
+                    'name': folder_name,
+                    'logs': logs
                 }
             
-            # Prendre le premier dossier de référence
+            # Prendre le premier sous-dossier (qui contient le numéro de référence)
             reference_folder = reference_folders[0]
             reference_path = os.path.join(product_folder_path, reference_folder)
-            logs.append(f"📁 Dossier référence: {reference_folder}")
+            logs.append(f"📁 Sous-dossier référence: {reference_folder}")
+            
+            # Extraire la référence du NOM DU SOUS-DOSSIER
+            detected_ref = extract_reference_from_folder_name(reference_folder)
+            if detected_ref:
+                logs.append(f"🔍 Référence détectée: {detected_ref}")
+            
+            # Trouver le produit en utilisant le nom du sous-dossier de référence
+            product, reference = find_product_by_reference(reference_folder)
+            
+            if not product:
+                error_msg = f"⚠️ Produit non trouvé dans la base de données"
+                logs.append(error_msg)
+                logs.append(f"   Dossier: {folder_name}")
+                logs.append(f"   Sous-dossier référence: {reference_folder}")
+                if reference:
+                    logs.append(f"   Référence recherchée: {reference}")
+                return {
+                    'status': 'not_found',
+                    'name': folder_name,
+                    'logs': logs
+                }
+            
+            logs.append(f"✅ Produit trouvé: [{product.reference}] {product.name}")
             
             # Chercher les dossiers Image et Menu (insensible à la casse)
             image_folder = None
@@ -1523,7 +1606,7 @@ def product_images_import(request):
             
             return {
                 'status': 'success',
-                'name': product_name,
+                'name': folder_name,
                 'product': product,
                 'images_count': images_added,
                 'logs': logs
