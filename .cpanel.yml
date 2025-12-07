@@ -1,0 +1,15 @@
+---
+# Configuration cPanel Git Deployment
+deployment:
+  tasks:
+    # Activation de l'environnement virtuel et installation des dépendances
+    - export VIRTUALENV=/home/mafourn2/virtualenv/backend/3.11
+    - export PATH=$VIRTUALENV/bin:$PATH
+    - cd /home/mafourn2/backend
+    - pip install -r requirements.txt
+    # Migrations de base de données
+    - python manage.py migrate --noinput
+    # Collection des fichiers statiques
+    - python manage.py collectstatic --noinput --clear
+    # Redémarrage de l'application
+    - touch passenger_wsgi.py
