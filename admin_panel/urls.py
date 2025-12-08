@@ -1,9 +1,13 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'admin_panel'
 
 urlpatterns = [
+    # Redirection de /admin-panel/ vers /admin-panel/dashboard/
+    path('', RedirectView.as_view(url='dashboard/', permanent=False), name='index'),
+    
     # Authentification
     path('login/', views.admin_login, name='login'),
     path('logout/', views.admin_logout, name='logout'),
