@@ -1,8 +1,8 @@
 # 🎉 FÉLICITATIONS! Votre projet est prêt!
 
-## 📦 Projet PC Store - E-commerce Django + MySQL
+## 📦 Projet PC Store - goback Django + MySQL
 
-Votre système e-commerce complet pour la vente de composants PC, périphériques et accessoires est maintenant créé!
+Votre système goback complet pour la vente de composants PC, périphériques et accessoires est maintenant créé!
 
 ---
 
@@ -363,7 +363,7 @@ Quand vous serez prêt à déployer :
 
 ## 🎉 Félicitations!
 
-Vous avez maintenant un système e-commerce professionnel et complet !
+Vous avez maintenant un système goback professionnel et complet !
 
 **Prochaine étape** : Configurez MySQL et lancez `.\setup.ps1`
 

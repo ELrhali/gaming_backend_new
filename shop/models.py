@@ -6,6 +6,7 @@ class Category(models.Model):
     """
     Catégorie principale: Composants, PC, Périphériques, Accessoires
     """
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='categories', null=True, blank=True, verbose_name="Collection")
     name = models.CharField(max_length=200, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True, verbose_name="Image")

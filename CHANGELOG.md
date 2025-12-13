@@ -1,4 +1,4 @@
-# Changelog - PC Store E-commerce
+# Changelog - PC Store goback
 
 ## Version 1.0.0 - Initial Release
 
@@ -249,4 +249,4 @@ MIT License
 
 ---
 
-**Note** : Ce projet est une base solide pour un e-commerce de composants PC. Vous pouvez l'étendre selon vos besoins spécifiques.
+**Note** : Ce projet est une base solide pour un goback de composants PC. Vous pouvez l'étendre selon vos besoins spécifiques.

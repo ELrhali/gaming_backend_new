@@ -1,8 +1,8 @@
-# 📦 PC Store - E-commerce Django avec MySQL
+# 📦 PC Store - goback Django avec MySQL
 
 ## ✨ Projet Créé avec Succès!
 
-Votre projet e-commerce complet pour la vente de composants PC est maintenant prêt à être utilisé.
+Votre projet goback complet pour la vente de composants PC est maintenant prêt à être utilisé.
 
 ---
 
@@ -303,7 +303,7 @@ python manage.py dumpdata > backup.json
 
 ## 🎉 Projet Complet et Fonctionnel!
 
-Vous avez maintenant un système e-commerce complet avec :
+Vous avez maintenant un système goback complet avec :
 - ✅ Backend Django professionnel
 - ✅ Interface admin intuitive
 - ✅ Base de données MySQL structurée
