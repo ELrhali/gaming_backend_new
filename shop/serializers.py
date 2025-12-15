@@ -7,15 +7,18 @@ from .models import Category, SubCategory, Type, Product, ProductImage, ProductS
 
 class BrandSerializer(serializers.ModelSerializer):
     """Serializer pour les marques"""
-    logo_url = serializers.SerializerMethodField()
+    logo_url_computed = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Brand
-        fields = ['id', 'name', 'slug', 'logo', 'logo_url', 'description', 'website', 'order', 'product_count']
+        fields = ['id', 'name', 'slug', 'logo', 'logo_url', 'logo_url_computed', 'description', 'order', 'is_active', 'product_count']
     
-    def get_logo_url(self, obj):
-        if obj.logo:
+    def get_logo_url_computed(self, obj):
+        # Priorité: logo_url (URL directe) > logo uploadé
+        if obj.logo_url:
+            return obj.logo_url
+        elif obj.logo:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.logo.url)

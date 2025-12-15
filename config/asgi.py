@@ -1,5 +1,5 @@
 """
-ASGI config for PC Store project.
+ASGI config for Goback project.
 """
 
 import os

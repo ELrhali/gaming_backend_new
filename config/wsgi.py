@@ -1,5 +1,5 @@
 """
-WSGI config for PC Store project.
+WSGI config for Goback project.
 """
 
 import os

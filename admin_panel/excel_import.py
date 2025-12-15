@@ -139,7 +139,7 @@ class ExcelImporter:
         self.created_collections = []
     
     def get_or_create_category(self, name):
-        """Récupère une catégorie"""
+        """Récupère ou crée une catégorie"""
         if not name:
             return None
         
@@ -147,15 +147,22 @@ class ExcelImporter:
         if not name:
             return None
         
+        # Chercher la catégorie (insensible à la casse)
         category = Category.objects.filter(name__iexact=name).first()
+        
+        # Si elle n'existe pas, la créer
         if not category:
-            self.errors.append(f"Catégorie '{name}' non trouvée")
-            return None
+            category = Category.objects.create(
+                name=name,
+                slug=slugify(name),
+                is_active=True
+            )
+            print(f"✅ Catégorie '{name}' créée automatiquement")
         
         return category
     
     def get_or_create_subcategory(self, name, category):
-        """Récupère une sous-catégorie"""
+        """Récupère ou crée une sous-catégorie"""
         if not name or not category:
             return None
         
@@ -165,14 +172,30 @@ class ExcelImporter:
         
         normalized_name = normalize_subcategory_name(name)
         
+        # Chercher la sous-catégorie (insensible à la casse)
         subcategory = SubCategory.objects.filter(
             name__iexact=normalized_name,
             category=category
         ).first()
         
+        # Si elle n'existe pas, la créer
         if not subcategory:
-            self.errors.append(f"Sous-catégorie '{name}' -> '{normalized_name}' non trouvée dans {category.name}")
-            return None
+            # Créer un slug unique
+            slug = slugify(normalized_name)
+            counter = 1
+            original_slug = slug
+            
+            while SubCategory.objects.filter(slug=slug).exists():
+                slug = f"{original_slug}-{counter}"
+                counter += 1
+            
+            subcategory = SubCategory.objects.create(
+                name=normalized_name,
+                category=category,
+                slug=slug,
+                is_active=True
+            )
+            print(f"✅ Sous-catégorie '{normalized_name}' créée automatiquement dans {category.name}")
         
         return subcategory
     
@@ -368,13 +391,13 @@ class ExcelImporter:
                     sql = """
                         INSERT INTO shop_product (
                             reference, name, slug, category_id, subcategory_id, type_id, collection_id,
-                            brand, brand_text, brand_id, price, discount_price, quantity, status,
+                            brand_text, brand_id, price, discount_price, quantity, status,
                             description, caracteristiques, warranty, weight, meta_title, meta_description,
                             is_bestseller, is_featured, is_new, show_in_ad_slider, views_count,
                             created_at, updated_at
                         ) VALUES (
                             %s, %s, %s, %s, %s, %s, %s,
-                            %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, %s, %s,
                             %s, %s, %s, %s, %s, %s,
                             %s, %s, %s, %s, %s,
                             NOW(), NOW()
@@ -384,7 +407,7 @@ class ExcelImporter:
                     cursor.execute(sql, [
                         reference, name, slug, category.id, subcategory.id,
                         type_obj.id if type_obj else None, collection.id if collection else None,
-                        brand_name or '', brand_name or '', brand.id if brand else None,
+                        brand_name or '', brand.id if brand else None,
                         price, discount_price, quantity, status,
                         description or '', caracteristiques or '', warranty or '',
                         weight, meta_title or '', meta_description or '',

@@ -157,6 +157,15 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         if type_slug:
             queryset = queryset.filter(type__slug=type_slug)
         
+        # Filtrer par marque (ID ou slug)
+        brand = self.request.query_params.get('brand', None)
+        if brand:
+            # Essayer d'abord par ID, sinon par slug
+            try:
+                queryset = queryset.filter(brand_id=int(brand))
+            except ValueError:
+                queryset = queryset.filter(brand__slug=brand)
+        
         # Filtrer par bestseller
         is_bestseller = self.request.query_params.get('is_bestseller', None)
         if is_bestseller and is_bestseller.lower() == 'true':

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Category, SubCategory, Type, Collection, Product, ProductImage, Brand, HeroSlide
 
 
@@ -42,21 +43,57 @@ class TypeAdmin(admin.ModelAdmin):
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ['name', 'order', 'is_active', 'website', 'created_at']
+    list_display = ['name', 'logo_preview', 'order', 'is_active', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['logo_preview_large']
+    
     fieldsets = (
         ('Informations de base', {
-            'fields': ('name', 'slug', 'logo')
+            'fields': ('name', 'slug')
+        }),
+        ('Logo', {
+            'fields': ('logo_preview_large', 'logo', 'logo_url'),
+            'description': 'Uploader une image OU coller une URL directe de l\'image'
         }),
         ('Description', {
-            'fields': ('description', 'website')
+            'fields': ('description',)
         }),
         ('Paramètres', {
             'fields': ('order', 'is_active')
         }),
     )
+    
+    def logo_preview(self, obj):
+        """Prévisualisation du logo dans la liste"""
+        if obj.logo_url:
+            return format_html(
+                '<img src="{}" style="max-width: 50px; max-height: 50px; object-fit: contain;" />',
+                obj.logo_url
+            )
+        elif obj.logo:
+            return format_html(
+                '<img src="{}" style="max-width: 50px; max-height: 50px; object-fit: contain;" />',
+                obj.logo.url
+            )
+        return '-'
+    logo_preview.short_description = 'Logo'
+    
+    def logo_preview_large(self, obj):
+        """Prévisualisation du logo dans le formulaire"""
+        if obj.logo_url:
+            return format_html(
+                '<img src="{}" style="max-width: 200px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; padding: 10px; background: white;" />',
+                obj.logo_url
+            )
+        elif obj.logo:
+            return format_html(
+                '<img src="{}" style="max-width: 200px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; padding: 10px; background: white;" />',
+                obj.logo.url
+            )
+        return 'Aucun logo'
+    logo_preview_large.short_description = 'Prévisualisation actuelle'
 
 
 @admin.register(Collection)

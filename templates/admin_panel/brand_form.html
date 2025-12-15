@@ -24,11 +24,11 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="logo" class="form-label">Logo</label>
+                        <label for="logo" class="form-label">Logo (Upload)</label>
                         {% if brand and brand.logo %}
                         <div class="mb-2">
                             <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;">
-                            <p class="text-muted small">Logo actuel</p>
+                            <p class="text-muted small">Logo actuel (uploadé)</p>
                         </div>
                         {% endif %}
                         <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
@@ -36,15 +36,22 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="4">{% if brand %}{{ brand.description }}{% endif %}</textarea>
+                        <label for="logo_url" class="form-label">OU Logo URL</label>
+                        {% if brand and brand.logo_url %}
+                        <div class="mb-2">
+                            <img src="{{ brand.logo_url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;" onerror="this.style.display='none'">
+                            <p class="text-muted small">Logo actuel (URL)</p>
+                        </div>
+                        {% endif %}
+                        <input type="url" class="form-control" id="logo_url" name="logo_url" 
+                               value="{% if brand %}{{ brand.logo_url }}{% endif %}" 
+                               placeholder="https://example.com/logo.png">
+                        <small class="text-muted">Vous pouvez soit uploader un logo, soit coller l'URL d'une image. L'URL sera prioritaire si les deux sont fournis.</small>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="website" class="form-label">Site Web</label>
-                        <input type="url" class="form-control" id="website" name="website" 
-                               value="{% if brand %}{{ brand.website }}{% endif %}" 
-                               placeholder="https://example.com">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{% if brand %}{{ brand.description }}{% endif %}</textarea>
                     </div>
                     
                     <div class="row">

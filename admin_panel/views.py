@@ -457,16 +457,16 @@ def brand_add(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         logo = request.FILES.get('logo')
+        logo_url = request.POST.get('logo_url', '')
         description = request.POST.get('description', '')
-        website = request.POST.get('website', '')
         order = request.POST.get('order', 0)
         is_active = request.POST.get('is_active') == 'on'
         
         brand = Brand.objects.create(
             name=name,
             logo=logo,
+            logo_url=logo_url,
             description=description,
-            website=website,
             order=order,
             is_active=is_active
         )
@@ -483,8 +483,8 @@ def brand_edit(request, pk):
         brand.name = request.POST.get('name')
         if 'logo' in request.FILES:
             brand.logo = request.FILES.get('logo')
+        brand.logo_url = request.POST.get('logo_url', '')
         brand.description = request.POST.get('description', '')
-        brand.website = request.POST.get('website', '')
         brand.order = request.POST.get('order', 0)
         brand.is_active = request.POST.get('is_active') == 'on'
         brand.save()

@@ -50,7 +50,6 @@
                         <th>Logo</th>
                         <th>Nom</th>
                         <th class="d-none d-md-table-cell">Description</th>
-                        <th class="d-none d-md-table-cell">Site Web</th>
                         <th>Ordre</th>
                         <th>Statut</th>
                         <th>Actions</th>
@@ -60,7 +59,9 @@
                     {% for brand in brands %}
                     <tr>
                         <td>
-                            {% if brand.logo %}
+                            {% if brand.logo_url %}
+                            <img src="{{ brand.logo_url }}" alt="{{ brand.name }}" style="width: 50px; height: 50px; object-fit: contain;" onerror="this.style.display='none'">
+                            {% elif brand.logo %}
                             <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="width: 50px; height: 50px; object-fit: contain;">
                             {% else %}
                             <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
@@ -70,15 +71,6 @@
                         </td>
                         <td><strong>{{ brand.name }}</strong></td>
                         <td class="d-none d-md-table-cell">{{ brand.description|truncatewords:10 }}</td>
-                        <td class="d-none d-md-table-cell">
-                            {% if brand.website %}
-                            <a href="{{ brand.website }}" target="_blank" class="text-decoration-none">
-                                <i class="bi bi-link-45deg"></i> Site
-                            </a>
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
                         <td>{{ brand.order }}</td>
                         <td>
                             {% if brand.is_active %}

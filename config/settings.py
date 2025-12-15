@@ -1,5 +1,5 @@
 """
-Django settings for PC Store project.
+Django settings for Goback project.
 """
 
 from pathlib import Path
@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'config.db_backend',  # Utiliser notre backend personnalisé
-        'NAME': os.getenv('DB_NAME', 'pc_store_db'),
+        'NAME': os.getenv('DB_NAME', 'goback_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
@@ -188,16 +188,16 @@ LOGOUT_REDIRECT_URL = '/admin-panel/login/'
 # Jazzmin settings - Interface admin moderne et claire
 JAZZMIN_SETTINGS = {
     # Titres et branding
-    "site_title": "PC Store Admin",
-    "site_header": "Administration de Gaming Store",
-    "site_brand": "PC Store Admin",
+    "site_title": "Goback Admin",
+    "site_header": "Administration de Goback",
+    "site_brand": "Goback Admin",
     "site_logo": None,
     "login_logo": None,
     "login_logo_dark": None,
     "site_logo_classes": "img-circle",
     "site_icon": None,
     "welcome_sign": "Bienvenue dans le panneau d'administration",
-    "copyright": "PC Gaming Store © 2025",
+    "copyright": "Goback © 2025",
     "search_model": ["shop.Product", "shop.Category", "shop.Brand", "orders.Order"],
     
     # Top Menu

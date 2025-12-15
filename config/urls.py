@@ -1,5 +1,5 @@
 """
-URL configuration for PC Store project.
+URL configuration for Goback project.
 """
 from django.contrib import admin
 from django.urls import path, include

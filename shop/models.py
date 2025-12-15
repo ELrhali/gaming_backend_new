@@ -3,9 +3,7 @@ from django.utils.text import slugify
 
 
 class Category(models.Model):
-    """
-    Catégorie principale: Composants, PC, Périphériques, Accessoires
-    """
+ 
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='categories', null=True, blank=True, verbose_name="Collection")
     name = models.CharField(max_length=200, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
@@ -32,9 +30,7 @@ class Category(models.Model):
 
 
 class SubCategory(models.Model):
-    """
-    Sous-catégorie: Cartes Mères, Cartes Graphiques, Écran PC, Clavier PC, etc.
-    """
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories', verbose_name="Catégorie")
     name = models.CharField(max_length=200, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
@@ -67,9 +63,9 @@ class Brand(models.Model):
     """
     name = models.CharField(max_length=200, unique=True, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
-    logo = models.ImageField(upload_to='brands/', blank=True, null=True, verbose_name="Logo")
+    logo = models.ImageField(upload_to='brands/', blank=True, null=True, verbose_name="Logo (Upload)")
+    logo_url = models.URLField(blank=True, max_length=500, verbose_name="URL du Logo", help_text="URL directe de l'image du logo")
     description = models.TextField(blank=True, verbose_name="Description")
-    website = models.URLField(blank=True, verbose_name="Site web")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,9 +86,7 @@ class Brand(models.Model):
 
 
 class Type(models.Model):
-    """
-    Modèle de produit lié à une marque: ROG Strix (ASUS), Gaming X (MSI), etc.
-    """
+
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='types', null=True, blank=True, verbose_name="Marque")
     subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='types', verbose_name="Sous-catégorie")
     name = models.CharField(max_length=200, verbose_name="Nom du modèle")
