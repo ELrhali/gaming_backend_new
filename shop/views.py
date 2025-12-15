@@ -4,7 +4,7 @@ Vues API pour le shop
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q, Prefetch
+from django.db.models import Q, F, Prefetch
 from .models import Category, SubCategory, Type, Product, ProductImage, Brand, HeroSlide
 from .serializers import (
     CategorySerializer, SubCategoryListSerializer, SubCategoryDetailSerializer,
@@ -180,6 +180,14 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         is_featured = self.request.query_params.get('is_featured', None)
         if is_featured and is_featured.lower() == 'true':
             queryset = queryset.filter(is_featured=True)
+        
+        # Filtrer par promotion (produits avec discount_price défini et inférieur au prix)
+        is_on_sale = self.request.query_params.get('is_on_sale', None)
+        if is_on_sale and is_on_sale.lower() == 'true':
+            queryset = queryset.filter(
+                discount_price__isnull=False,
+                discount_price__lt=F('price')
+            )
         
         # Filtrer par prix
         min_price = self.request.query_params.get('min_price', None)
