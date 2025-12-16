@@ -155,7 +155,7 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings for production
-csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://mafourniturescolaire.ma')
+csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',')]
 
 # Configuration pour proxy inverse (reverse proxy)
@@ -203,14 +203,14 @@ JAZZMIN_SETTINGS = {
     # Top Menu
     "topmenu_links": [
         {"name": "Accueil", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Voir le site", "url": "https://mafourniturescolaire.ma", "new_window": True},
+        {"name": "Voir le site", "url": "https://gobag.ma", "new_window": True},
         {"model": "auth.User"},
         {"app": "shop"},
     ],
     
     # User Menu
     "usermenu_links": [
-        {"name": "Voir le site", "url": "https://mafourniturescolaire.ma", "new_window": True},
+        {"name": "Voir le site", "url": "https://gobag.ma", "new_window": True},
         {"model": "auth.user", "icon": "fas fa-user"},
     ],
     
