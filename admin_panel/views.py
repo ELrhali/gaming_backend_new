@@ -83,25 +83,19 @@ def dashboard(request):
             except ValueError:
                 pass
     
-    # Debug: afficher les filtres appliqués
-    print(f"🔍 Dashboard filters: period={period}, date_from={date_from}, date_to={date_to}")
-    
     # Filtrer les commandes selon la période - utiliser des datetimes au lieu de dates
     orders_query = Order.objects.all()
-    print(f"📊 Total orders in DB: {orders_query.count()}")
     
     if date_from:
         # Convertir la date en datetime avec début de journée (00:00:00)
         from datetime import datetime as dt
         datetime_from = timezone.make_aware(dt.combine(date_from, dt.min.time()))
         orders_query = orders_query.filter(created_at__gte=datetime_from)
-        print(f"📊 After date_from filter (>= {datetime_from}): {orders_query.count()}")
     if date_to:
         # Convertir la date en datetime avec fin de journée (23:59:59)
         from datetime import datetime as dt
         datetime_to = timezone.make_aware(dt.combine(date_to, dt.max.time()))
         orders_query = orders_query.filter(created_at__lte=datetime_to)
-        print(f"📊 After date_to filter (<= {datetime_to}): {orders_query.count()}")
     
     # Statistiques globales
     total_products = Product.objects.count()
