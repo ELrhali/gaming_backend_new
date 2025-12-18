@@ -24,7 +24,16 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+
+# Configuration stricte pour la production
+ALLOWED_HOSTS = [
+    "api.gobag.ma",
+    "www.api.gobag.ma",
+    "localhost",
+    "127.0.0.1",
+    "192.168.3.55",
+]
+
 
 
 # Application definition
@@ -136,9 +145,10 @@ USE_TZ = True
 
 STATIC_URL = os.getenv('STATIC_URL', '/static/')
 STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+
+# Seulement inclure le dossier static s'il existe
+_static_dir = BASE_DIR / 'static'
+STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
 
 # Media files (uploads)
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
@@ -151,25 +161,43 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
 cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://goback-frontend-11uj.vercel.app",
+    "https://www.gobag.ma",
+    "http://192.168.3.55:3000",
+    "https://gobag.ma",
+    "https://www.gobag.ma",
+]
 
-# CSRF settings for production
-csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma')
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',')]
+# ALLOWED_HOSTS : uniquement les domaines backend
+ALLOWED_HOSTS = [
+    "api.gobag.ma",
+    "www.api.gobag.ma",
+    "localhost",
+    "127.0.0.1",
+    "192.168.3.55",
+]
+CORS_ALLOW_ALL_ORIGINS = False
+
+
+# CSRF settings pour api.gobag.ma
+CSRF_TRUSTED_ORIGINS = ['https://api.gobag.ma']
 
 # Configuration pour proxy inverse (reverse proxy)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
-# Configuration CSRF pour proxy
-CSRF_COOKIE_SECURE = not DEBUG  # True en production, False en dev
-CSRF_COOKIE_HTTPONLY = False
-CSRF_USE_SESSIONS = False
-SESSION_COOKIE_SECURE = not DEBUG  # True en production, False en dev
+
+# Cookies sécurisés en production
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
 
 # REST Framework settings
 REST_FRAMEWORK = {
