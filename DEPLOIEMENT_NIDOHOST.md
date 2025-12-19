@@ -107,7 +107,7 @@ CSRF_TRUSTED_ORIGINS=https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma
 STATIC_URL=/static/
 STATIC_ROOT=/home/gobagma/public_html/backend/staticfiles
 MEDIA_URL=/media/
-MEDIA_ROOT=/home/gobagma/public_html/backend/media
+MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
 ```
 
 **Pour générer une SECRET_KEY sécurisée**:

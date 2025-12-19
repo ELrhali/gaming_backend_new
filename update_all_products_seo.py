@@ -81,12 +81,12 @@ def update_products_seo():
     print("📊 Résumé SEO:")
     print(f"   • Meta Title: Format '[Produit] - [Catégorie] | Gobag.ma'")
     print(f"   • Meta Description: 150-160 caractères avec promotion et livraison")
-    print(f"   • Keywords: Optimisé pour fournitures scolaires et matériel éducatif")
+    print(f"   • Keywords: Optimisé pour sacs, valises et bagages")
     print()
     print("🌐 Les produits sont maintenant optimisés pour:")
     print("   • Google Search")
     print("   • Recherche locale Maroc")
-    print("   • Mots-clés: fournitures scolaires, matériel éducatif, école")
+    print("   • Mots-clés: sacs, valises, bagages, maroquinerie")
     print("   • Rich Snippets avec prix et disponibilité")
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 # 🛍️ Goback Backend - E-commerce Django API
 
-Backend Django pour la plateforme e-commerce Goback (Fournitures Scolaires).
+Backend Django pour la plateforme e-commerce Goback (Sacs, Valises et Bagages).
 
 ## 🌐 URLs de Production
 

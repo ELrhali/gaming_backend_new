@@ -88,7 +88,7 @@ CSRF_TRUSTED_ORIGINS=https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma
 
 # Chemins
 STATIC_ROOT=/home/gobagma/public_html/backend/staticfiles
-MEDIA_ROOT=/home/gobagma/public_html/backend/media
+MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
 ```
 
 ## 📊 Architecture de Production
