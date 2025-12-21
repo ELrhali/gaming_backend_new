@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import Category, SubCategory, Type, Collection, Product, ProductImage, Brand, HeroSlide
 
 
@@ -16,6 +17,36 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ['show_in_ad_slider']
     inlines = [SubCategoryInline]
+    readonly_fields = ['image_dimension_info']
+    
+    fieldsets = (
+        ('Informations de base', {
+            'fields': ('name', 'slug', 'collection')
+        }),
+        ('Image', {
+            'fields': ('image_dimension_info', 'image',),
+        }),
+        ('Description', {
+            'fields': ('description',)
+        }),
+        ('Paramètres', {
+            'fields': ('order', 'is_active', 'show_in_ad_slider')
+        }),
+    )
+    
+    def image_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">800 × 320 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: 2.5:1 (paysage large)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: WebP ou JPG optimisé<br>'
+            '✅ Taille max: 100 KB<br>'
+            '✅ Sujet principal au centre'
+            '</div></div>'
+        )
+    image_dimension_info.short_description = ''
 
 
 class TypeInline(admin.TabularInline):
@@ -31,6 +62,36 @@ class SubCategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ['is_essential', 'is_active', 'show_on_homepage']
     inlines = [TypeInline]
+    readonly_fields = ['image_dimension_info']
+    
+    fieldsets = (
+        ('Informations de base', {
+            'fields': ('category', 'name', 'slug')
+        }),
+        ('Image', {
+            'fields': ('image_dimension_info', 'image',),
+        }),
+        ('Description', {
+            'fields': ('description',)
+        }),
+        ('Paramètres', {
+            'fields': ('order', 'is_active', 'is_essential', 'show_on_homepage')
+        }),
+    )
+    
+    def image_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">400 × 450 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: ~1:1 (carré/portrait)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: WebP ou JPG optimisé<br>'
+            '✅ Taille max: 80 KB<br>'
+            '✅ Utilisée dans CreativeBackground'
+            '</div></div>'
+        )
+    image_dimension_info.short_description = ''
 
 
 @admin.register(Type)
@@ -47,15 +108,14 @@ class BrandAdmin(admin.ModelAdmin):
     list_filter = ['is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['logo_preview_large']
+    readonly_fields = ['logo_preview_large', 'logo_dimension_info']
     
     fieldsets = (
         ('Informations de base', {
             'fields': ('name', 'slug')
         }),
         ('Logo', {
-            'fields': ('logo_preview_large', 'logo', 'logo_url'),
-            'description': 'Uploader une image OU coller une URL directe de l\'image'
+            'fields': ('logo_dimension_info', 'logo_preview_large', 'logo', 'logo_url'),
         }),
         ('Description', {
             'fields': ('description',)
@@ -64,6 +124,20 @@ class BrandAdmin(admin.ModelAdmin):
             'fields': ('order', 'is_active')
         }),
     )
+    
+    def logo_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">200 × 200 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: 1:1 (carré)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: PNG transparent ou WebP<br>'
+            '✅ Taille max: 50 KB<br>'
+            '✅ Affiché dans un cercle'
+            '</div></div>'
+        )
+    logo_dimension_info.short_description = ''
     
     def logo_preview(self, obj):
         """Prévisualisation du logo dans la liste"""
@@ -102,11 +176,50 @@ class CollectionAdmin(admin.ModelAdmin):
     list_filter = ['is_active']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['image_dimension_info']
+    
+    fieldsets = (
+        ('Informations de base', {
+            'fields': ('name', 'slug')
+        }),
+        ('Image', {
+            'fields': ('image_dimension_info', 'image',),
+        }),
+        ('Description', {
+            'fields': ('description',)
+        }),
+        ('Paramètres', {
+            'fields': ('is_active',)
+        }),
+    )
+    
+    def image_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">600 × 600 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: 1:1 (carré)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: WebP ou JPG optimisé<br>'
+            '✅ Taille max: 100 KB'
+            '</div></div>'
+        )
+    image_dimension_info.short_description = ''
 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+    readonly_fields = ['image_info']
+    fields = ['image_info', 'image', 'is_main', 'order']
+    
+    def image_info(self, obj):
+        return format_html(
+            '<span style="background: #ff6b6b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">'
+            '📐 600×600 px (carré)'
+            '</span>'
+        )
+    image_info.short_description = 'Dimension'
 
 
 @admin.register(Product)
@@ -117,10 +230,14 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('reference', 'name')}
     list_editable = ['show_in_ad_slider']
     inlines = [ProductImageInline]
+    readonly_fields = ['image_dimension_info']
     
     fieldsets = (
         ('Informations de base', {
-            'fields': ('reference', 'name', 'slug', 'main_image')
+            'fields': ('reference', 'name', 'slug')
+        }),
+        ('Image principale', {
+            'fields': ('image_dimension_info', 'main_image'),
         }),
         ('SEO', {
             'fields': ('meta_title', 'meta_description')
@@ -141,6 +258,20 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('brand_text', 'warranty', 'weight')
         }),
     )
+    
+    def image_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">600 × 600 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: 1:1 (carré)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: WebP ou JPG optimisé<br>'
+            '✅ Taille max: 100 KB<br>'
+            '✅ Fond blanc préféré'
+            '</div></div>'
+        )
+    image_dimension_info.short_description = ''
 
 
 @admin.register(HeroSlide)
@@ -149,6 +280,7 @@ class HeroSlideAdmin(admin.ModelAdmin):
     list_filter = ['slide_type', 'is_active', 'created_at']
     search_fields = ['title', 'description']
     list_editable = ['order', 'is_active']
+    readonly_fields = ['image_dimension_info']
     
     fieldsets = (
         ('Informations du Slide', {
@@ -160,14 +292,28 @@ class HeroSlideAdmin(admin.ModelAdmin):
             'description': 'Sélectionnez UN SEUL élément selon le type choisi ci-dessus'
         }),
         ('Image', {
-            'fields': ('custom_image',),
-            'description': 'Image personnalisée (optionnel - sinon l\'image de l\'élément sera utilisée)'
+            'fields': ('image_dimension_info', 'custom_image',),
         }),
         ('Paramètres', {
             'fields': ('order', 'is_active'),
             'description': 'Ordre d\'affichage et activation du slide'
         }),
     )
+    
+    def image_dimension_info(self, obj):
+        return format_html(
+            '<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
+            '<strong style="font-size: 16px;">📐 DIMENSION RECOMMANDÉE</strong><br><br>'
+            '<span style="font-size: 24px; font-weight: bold;">1200 × 500 px</span><br>'
+            '<span style="opacity: 0.9;">Ratio: 2.4:1 (bannière)</span><br><br>'
+            '<div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px; font-size: 12px;">'
+            '✅ Format: WebP ou JPG optimisé<br>'
+            '✅ Taille max: 150 KB<br>'
+            '✅ Sur mobile, image centrée<br>'
+            '⚠️ Laissez vide pour utiliser l\'image de l\'élément'
+            '</div></div>'
+        )
+    image_dimension_info.short_description = ''
     
     def get_target(self, obj):
         """Affiche l'élément ciblé par le slide"""

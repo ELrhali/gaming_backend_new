@@ -25,6 +25,13 @@
                     
                     <div class="mb-3">
                         <label for="logo" class="form-label">Logo (Upload)</label>
+                        <div class="alert alert-info alert-permanent py-2 mb-2">
+                            <small>
+                                <i class="bi bi-aspect-ratio"></i> <strong>Dimension recommandée:</strong> 200 x 200 px (carré)<br>
+                                <i class="bi bi-file-image"></i> <strong>Format:</strong> PNG transparent ou WebP recommandé (JPG aussi accepté) | <strong>Taille max:</strong> 50 KB<br>
+                                <i class="bi bi-circle"></i> <strong>Note:</strong> Le logo sera affiché dans un cercle
+                            </small>
+                        </div>
                         {% if brand and brand.logo %}
                         <div class="mb-2">
                             <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;">
@@ -32,7 +39,6 @@
                         </div>
                         {% endif %}
                         <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
-                        <small class="text-muted">Formats acceptés: JPG, PNG, SVG. Taille recommandée: 200x100px</small>
                     </div>
                     
                     <div class="mb-3">

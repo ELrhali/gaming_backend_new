@@ -33,6 +33,13 @@
 
             <div class="mb-3">
                 <label for="{{ form.image.id_for_label }}" class="form-label">Image</label>
+                <div class="alert alert-info alert-permanent py-2 mb-2">
+                    <small>
+                        <i class="bi bi-aspect-ratio"></i> <strong>Dimension recommandée:</strong> 800 x 320 px (ratio 2.5:1 paysage large)<br>
+                        <i class="bi bi-file-image"></i> <strong>Format:</strong> WebP ou JPG recommandé (PNG, GIF aussi acceptés) | <strong>Taille max:</strong> 100 KB<br>
+                        <i class="bi bi-phone"></i> <strong>Conseil:</strong> Sujet principal au centre de l'image
+                    </small>
+                </div>
                 {{ form.image }}
                 {% if form.image.errors %}
                     <div class="text-danger">{{ form.image.errors }}</div>
