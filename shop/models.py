@@ -8,7 +8,7 @@ class Category(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True, verbose_name="Image", 
-                              help_text="📐 Dimension recommandée: 800x320 px (ratio 2.5:1 paysage). Format: WebP/JPG < 100KB")
+                              help_text="Dimension recommandee: 800x320 px (ratio 2.5:1 paysage). Format: WebP/JPG < 100KB")
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
@@ -36,7 +36,7 @@ class SubCategory(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='subcategories/', blank=True, null=True, verbose_name="Image",
-                              help_text="📐 Dimension recommandée: 400x450 px (ratio 1:1 carré/portrait). Pour CreativeBackground et SubcategoryShowcase. Format: WebP/JPG < 80KB")
+                              help_text="Dimension recommandee: 400x450 px (ratio 1:1 carre/portrait). Pour CreativeBackground et SubcategoryShowcase. Format: WebP/JPG < 80KB")
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
@@ -66,7 +66,7 @@ class Brand(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name="Nom")
     slug = models.SlugField(max_length=200, unique=True)
     logo = models.ImageField(upload_to='brands/', blank=True, null=True, verbose_name="Logo (Upload)",
-                             help_text="📐 Dimension recommandée: 200x200 px (carré). Logo affiché dans un cercle. Format: PNG transparent ou WebP < 50KB")
+                             help_text="Dimension recommandee: 200x200 px (carre). Logo affiche dans un cercle. Format: PNG transparent ou WebP < 50KB")
     logo_url = models.URLField(blank=True, max_length=500, verbose_name="URL du Logo", help_text="URL directe de l'image du logo (même dimension: 200x200 px carré)")
     description = models.TextField(blank=True, verbose_name="Description")
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage")
@@ -124,7 +124,7 @@ class Collection(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True, verbose_name="Description")
     image = models.ImageField(upload_to='collections/', blank=True, null=True, verbose_name="Image",
-                              help_text="📐 Dimension recommandée: 600x600 px (carré). Format: WebP/JPG < 100KB")
+                              help_text="Dimension recommandee: 600x600 px (carre). Format: WebP/JPG < 100KB")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -187,7 +187,7 @@ class Product(models.Model):
     
     # Images
     main_image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Image principale (deprecated)",
-                                   help_text="📐 Dimension recommandée: 600x600 px (carré 1:1). Fond blanc. Format: WebP/JPG < 100KB")
+                                   help_text="Dimension recommandee: 600x600 px (carre 1:1). Fond blanc. Format: WebP/JPG < 100KB")
     
     # Métadonnées
     views_count = models.IntegerField(default=0, verbose_name="Nombre de vues")
@@ -245,7 +245,7 @@ class ProductImage(models.Model):
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images', verbose_name="Produit")
     image = models.ImageField(upload_to='products/gallery/', verbose_name="Image",
-                              help_text="📐 Dimension recommandée: 600x600 px (carré 1:1). Fond blanc préféré. Format: WebP/JPG < 100KB")
+                              help_text="Dimension recommandee: 600x600 px (carre 1:1). Fond blanc prefere. Format: WebP/JPG < 100KB")
     is_main = models.BooleanField(default=False, verbose_name="Image principale")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -298,8 +298,8 @@ class HeroSlide(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='hero_slides', verbose_name="Produit")
     
     # Image personnalisée (optionnel - sinon utilise l'image de la catégorie/produit)
-    custom_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Image personnalisée", 
-                                     help_text="📐 Dimension recommandée: 1200x500 px (ratio 2.4:1 bannière). Mobile: image centrée. Format: WebP/JPG < 150KB. Laissez vide pour utiliser l'image du produit/catégorie")
+    custom_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Image personnalisee", 
+                                     help_text="Dimension recommandee: 1200x500 px (ratio 2.4:1 banniere). Mobile: image centree. Format: WebP/JPG < 150KB. Laissez vide pour utiliser l'image du produit/categorie")
     
     # Paramètres
     order = models.IntegerField(default=0, verbose_name="Ordre d'affichage", help_text="Plus petit = affiché en premier")

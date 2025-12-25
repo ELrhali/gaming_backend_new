@@ -159,5 +159,5 @@ class HeroSlideForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
-            'custom_image': '📐 Dimensions recommandées : 1920x500 pixels | Format : JPG ou PNG | Poids max : 200 KB',
+            'custom_image': 'Dimensions recommandees : 1920x500 pixels | Format : JPG ou PNG | Poids max : 200 KB',
         }

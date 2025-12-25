@@ -216,6 +216,10 @@ def category_add(request):
 def category_edit(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == 'POST':
+        # Vérifier si on veut supprimer l'image
+        if request.POST.get('clear_image'):
+            category.image.delete(save=False)
+            category.image = None
         form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             form.save()
@@ -223,7 +227,11 @@ def category_edit(request, pk):
             return redirect('admin_panel:category_list')
     else:
         form = CategoryForm(instance=category)
-    return render(request, 'admin_panel/category_form.html', {'form': form, 'title': 'Modifier la catégorie'})
+    return render(request, 'admin_panel/category_form.html', {
+        'form': form, 
+        'title': 'Modifier la catégorie',
+        'category': category
+    })
 
 
 @login_required
@@ -307,6 +315,10 @@ def subcategory_add(request):
 def subcategory_edit(request, pk):
     subcategory = get_object_or_404(SubCategory, pk=pk)
     if request.method == 'POST':
+        # Vérifier si on veut supprimer l'image
+        if request.POST.get('clear_image'):
+            subcategory.image.delete(save=False)
+            subcategory.image = None
         form = SubCategoryForm(request.POST, request.FILES, instance=subcategory)
         if form.is_valid():
             form.save()
@@ -314,7 +326,11 @@ def subcategory_edit(request, pk):
             return redirect('admin_panel:subcategory_list')
     else:
         form = SubCategoryForm(instance=subcategory)
-    return render(request, 'admin_panel/subcategory_form.html', {'form': form, 'title': 'Modifier la sous-catégorie'})
+    return render(request, 'admin_panel/subcategory_form.html', {
+        'form': form, 
+        'title': 'Modifier la sous-catégorie',
+        'subcategory': subcategory
+    })
 
 
 @login_required
@@ -475,8 +491,14 @@ def brand_edit(request, pk):
     brand = get_object_or_404(Brand, pk=pk)
     if request.method == 'POST':
         brand.name = request.POST.get('name')
-        if 'logo' in request.FILES:
+        
+        # Vérifier si on veut supprimer le logo
+        if request.POST.get('clear_logo'):
+            brand.logo.delete(save=False)
+            brand.logo = None
+        elif 'logo' in request.FILES:
             brand.logo = request.FILES.get('logo')
+        
         brand.logo_url = request.POST.get('logo_url', '')
         brand.description = request.POST.get('description', '')
         brand.order = request.POST.get('order', 0)
@@ -825,42 +847,49 @@ def order_detail(request, pk):
 def order_confirm(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == 'POST':
-        # Vérifier si le stock a déjà été déduit
-        if order.stock_deducted:
-            messages.warning(request, f'La commande {order.order_number} a déjà été confirmée et le stock a déjà été déduit.')
+        try:
+            # Verifier si le stock a deja ete deduit
+            if order.stock_deducted:
+                messages.warning(request, f'La commande {order.order_number} a deja ete confirmee et le stock a deja ete deduit.')
+                return redirect('admin_panel:order_detail', pk=pk)
+            
+            # Verifier le stock disponible pour tous les produits
+            insufficient_stock = []
+            for item in order.items.all():
+                if item.product.quantity < item.quantity:
+                    insufficient_stock.append(f"{item.product_name} (Stock disponible: {item.product.quantity}, Quantite demandee: {item.quantity})")
+            
+            if insufficient_stock:
+                messages.error(request, f'Stock insuffisant pour: {", ".join(insufficient_stock)}')
+                return redirect('admin_panel:order_detail', pk=pk)
+            
+            # Deduire les quantites du stock
+            for item in order.items.all():
+                product = item.product
+                old_quantity = product.quantity
+                product.quantity -= item.quantity
+                product.save(update_fields=['quantity'])
+                # Log pour debug
+                print(f"Stock mis a jour pour {product.name}: {old_quantity} -> {product.quantity}")
+            
+            # Mettre a jour le statut de la commande et marquer le stock comme deduit
+            order.status = 'confirmed'
+            order.confirmed_at = timezone.now()
+            order.stock_deducted = True
+            order.save()
+            
+            # Creer une livraison si elle n'existe pas
+            if not hasattr(order, 'delivery'):
+                Delivery.objects.create(order=order)
+            
+            messages.success(request, f'Commande {order.order_number} confirmee. Le stock a ete mis a jour.')
             return redirect('admin_panel:order_detail', pk=pk)
-        
-        # Vérifier le stock disponible pour tous les produits
-        insufficient_stock = []
-        for item in order.items.all():
-            if item.product.quantity < item.quantity:
-                insufficient_stock.append(f"{item.product_name} (Stock disponible: {item.product.quantity}, Quantité demandée: {item.quantity})")
-        
-        if insufficient_stock:
-            messages.error(request, f'❌ Stock insuffisant pour: {", ".join(insufficient_stock)}')
+        except Exception as e:
+            import traceback
+            print(f"Erreur order_confirm: {str(e)}")
+            print(traceback.format_exc())
+            messages.error(request, f'Erreur lors de la confirmation: {str(e)}')
             return redirect('admin_panel:order_detail', pk=pk)
-        
-        # Déduire les quantités du stock
-        for item in order.items.all():
-            product = item.product
-            old_quantity = product.quantity
-            product.quantity -= item.quantity
-            product.save(update_fields=['quantity'])
-            # Log pour debug
-            print(f"✅ Stock mis à jour pour {product.name}: {old_quantity} → {product.quantity}")
-        
-        # Mettre à jour le statut de la commande et marquer le stock comme déduit
-        order.status = 'confirmed'
-        order.confirmed_at = timezone.now()
-        order.stock_deducted = True
-        order.save()
-        
-        # Créer une livraison si elle n'existe pas
-        if not hasattr(order, 'delivery'):
-            Delivery.objects.create(order=order)
-        
-        messages.success(request, f'✅ Commande {order.order_number} confirmée. Le stock a été mis à jour.')
-        return redirect('admin_panel:order_detail', pk=pk)
     return render(request, 'admin_panel/order_confirm.html', {'order': order})
 
 
@@ -868,24 +897,31 @@ def order_confirm(request, pk):
 def order_cancel(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == 'POST':
-        # Si le stock a été déduit, le restaurer
-        if order.stock_deducted:
-            for item in order.items.all():
-                product = item.product
-                old_quantity = product.quantity
-                product.quantity += item.quantity
-                product.save(update_fields=['quantity'])
-                # Log pour debug
-                print(f"♻️ Stock restauré pour {product.name}: {old_quantity} → {product.quantity}")
+        try:
+            # Si le stock a ete deduit, le restaurer
+            if order.stock_deducted:
+                for item in order.items.all():
+                    product = item.product
+                    old_quantity = product.quantity
+                    product.quantity += item.quantity
+                    product.save(update_fields=['quantity'])
+                    # Log pour debug
+                    print(f"Stock restaure pour {product.name}: {old_quantity} -> {product.quantity}")
+                
+                order.stock_deducted = False
+                messages.success(request, f'Commande {order.order_number} annulee. Le stock a ete restaure.')
+            else:
+                messages.success(request, f'Commande {order.order_number} annulee.')
             
-            order.stock_deducted = False
-            messages.success(request, f'✅ Commande {order.order_number} annulée. Le stock a été restauré.')
-        else:
-            messages.success(request, f'Commande {order.order_number} annulée.')
-        
-        order.status = 'cancelled'
-        order.save()
-        return redirect('admin_panel:order_detail', pk=pk)
+            order.status = 'cancelled'
+            order.save()
+            return redirect('admin_panel:order_detail', pk=pk)
+        except Exception as e:
+            import traceback
+            print(f"Erreur order_cancel: {str(e)}")
+            print(traceback.format_exc())
+            messages.error(request, f'Erreur lors de l annulation: {str(e)}')
+            return redirect('admin_panel:order_detail', pk=pk)
     return render(request, 'admin_panel/order_cancel.html', {'order': order})
 
 
@@ -1259,8 +1295,8 @@ def product_import(request):
             result = importer.import_from_excel(tmp_path)
             
             if result['success']:
-                # Message de succès détaillé
-                success_msg = f"✅ Importation terminée avec succès!\n"
+                # Message de succes detaille
+                success_msg = f"[OK] Importation terminee avec succes!\n"
                 success_msg += f"• {result['created']} produits créés\n"
                 success_msg += f"• {result['skipped']} produits ignorés (doublons ou données manquantes)\n"
                 
@@ -1283,15 +1319,15 @@ def product_import(request):
                 
                 # Afficher les erreurs s'il y en a
                 if result['errors']:
-                    error_msg = "⚠️ Erreurs rencontrées:\n" + "\n".join(result['errors'][:10])
+                    error_msg = "[ATTENTION] Erreurs rencontrees:\n" + "\n".join(result['errors'][:10])
                     if len(result['errors']) > 10:
                         error_msg += f"\n... et {len(result['errors']) - 10} autres erreurs"
                     messages.warning(request, error_msg)
             else:
-                messages.error(request, f"❌ Erreur: {result['error']}")
+                messages.error(request, f"[ERREUR] {result['error']}")
         
         except Exception as e:
-            messages.error(request, f"❌ Erreur lors de l'importation: {str(e)}")
+            messages.error(request, f"[ERREUR] Erreur lors de l'importation: {str(e)}")
         
         finally:
             # Supprimer le fichier temporaire
@@ -1519,7 +1555,7 @@ def product_images_import(request):
                                 if os.path.isdir(os.path.join(product_folder_path, d))]
             
             if not reference_folders:
-                logs.append(f"⚠️ Aucun sous-dossier trouvé")
+                logs.append(f"[ATTENTION] Aucun sous-dossier trouve")
                 return {
                     'status': 'no_reference_folder',
                     'name': folder_name,
@@ -1529,18 +1565,18 @@ def product_images_import(request):
             # Prendre le premier sous-dossier (qui contient le numéro de référence)
             reference_folder = reference_folders[0]
             reference_path = os.path.join(product_folder_path, reference_folder)
-            logs.append(f"📁 Sous-dossier référence: {reference_folder}")
+            logs.append(f"[DOSSIER] Sous-dossier reference: {reference_folder}")
             
-            # Extraire la référence du NOM DU SOUS-DOSSIER
+            # Extraire la reference du NOM DU SOUS-DOSSIER
             detected_ref = extract_reference_from_folder_name(reference_folder)
             if detected_ref:
-                logs.append(f"🔍 Référence détectée: {detected_ref}")
+                logs.append(f"[REF] Reference detectee: {detected_ref}")
             
             # Trouver le produit en utilisant le nom du sous-dossier de référence
             product, reference = find_product_by_reference(reference_folder)
             
             if not product:
-                error_msg = f"⚠️ Produit non trouvé dans la base de données"
+                error_msg = f"[ATTENTION] Produit non trouve dans la base de donnees"
                 logs.append(error_msg)
                 logs.append(f"   Dossier: {folder_name}")
                 logs.append(f"   Sous-dossier référence: {reference_folder}")
@@ -1552,9 +1588,9 @@ def product_images_import(request):
                     'logs': logs
                 }
             
-            logs.append(f"✅ Produit trouvé: [{product.reference}] {product.name}")
+            logs.append(f"[OK] Produit trouve: [{product.reference}] {product.name}")
             
-            # Chercher les dossiers Image et Menu (insensible à la casse)
+            # Chercher les dossiers Image et Menu (insensible a la casse)
             image_folder = None
             menu_folder = None
             
@@ -1577,26 +1613,26 @@ def product_images_import(request):
                     success, msg = copy_image_to_media(image_files[0], product, is_main=True)
                     if success:
                         images_added += 1
-                        logs.append(f"✅ {msg}")
+                        logs.append(f"[OK] {msg}")
                     else:
-                        logs.append(f"❌ {msg}")
+                        logs.append(f"[ERREUR] {msg}")
                 else:
-                    logs.append(f"⚠️ Aucune image trouvée dans le dossier Image")
+                    logs.append(f"[ATTENTION] Aucune image trouvee dans le dossier Image")
             else:
-                logs.append(f"⚠️ Dossier 'Image' non trouvé")
+                logs.append(f"[ATTENTION] Dossier 'Image' non trouve")
             
-            # Traiter les images supplémentaires (dossier Menu)
+            # Traiter les images supplementaires (dossier Menu)
             if menu_folder:
                 menu_images = get_image_files(menu_folder)
                 for image_path in menu_images:
                     success, msg = copy_image_to_media(image_path, product, is_main=False)
                     if success:
                         images_added += 1
-                        logs.append(f"✅ {msg}")
+                        logs.append(f"[OK] {msg}")
                     else:
-                        logs.append(f"❌ {msg}")
+                        logs.append(f"[ERREUR] {msg}")
             else:
-                logs.append(f"⚠️ Dossier 'Menu' non trouvé")
+                logs.append(f"[ATTENTION] Dossier 'Menu' non trouve")
             
             return {
                 'status': 'success',
@@ -1644,30 +1680,30 @@ def product_images_import(request):
                     
                 except Exception as e:
                     stats['errors'] += 1
-                    detailed_logs.append(f"❌ Erreur inattendue pour {os.path.basename(product_folder)}: {e}")
+                    detailed_logs.append(f"[ERREUR] Erreur inattendue pour {os.path.basename(product_folder)}: {e}")
             
-            # Message de succès
-            success_msg = f"✅ Importation terminée!\n"
-            success_msg += f"• {stats['success']}/{stats['total']} produits traités avec succès\n"
-            success_msg += f"• {stats['total_images']} images importées\n"
-            success_msg += f"• {stats['not_found']} produits non trouvés en base\n"
-            success_msg += f"• {stats['errors']} erreurs"
+            # Message de succes
+            success_msg = f"[OK] Importation terminee!\n"
+            success_msg += f"- {stats['success']}/{stats['total']} produits traites avec succes\n"
+            success_msg += f"- {stats['total_images']} images importees\n"
+            success_msg += f"- {stats['not_found']} produits non trouves en base\n"
+            success_msg += f"- {stats['errors']} erreurs"
             
             messages.success(request, success_msg)
             
-            # Afficher les produits non trouvés
+            # Afficher les produits non trouves
             if not_found_products:
-                warning_msg = f"⚠️ Produits non trouvés ({len(not_found_products)}):\n"
-                warning_msg += "\n".join([f"• {name}" for name in not_found_products[:10]])
+                warning_msg = f"[ATTENTION] Produits non trouves ({len(not_found_products)}):\n"
+                warning_msg += "\n".join([f"- {name}" for name in not_found_products[:10]])
                 if len(not_found_products) > 10:
                     warning_msg += f"\n... et {len(not_found_products) - 10} autres"
                 messages.warning(request, warning_msg)
             
-            # Sauvegarder les logs détaillés dans la session pour affichage
+            # Sauvegarder les logs detailles dans la session pour affichage
             request.session['import_logs'] = detailed_logs
             
         except Exception as e:
-            messages.error(request, f"❌ Erreur lors de l'importation: {str(e)}")
+            messages.error(request, f"[ERREUR] Erreur lors de l'importation: {str(e)}")
         
         return redirect('admin_panel:product_images_import')
     

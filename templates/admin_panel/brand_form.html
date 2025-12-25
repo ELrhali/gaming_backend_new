@@ -33,20 +33,50 @@
                             </small>
                         </div>
                         {% if brand and brand.logo %}
-                        <div class="mb-2">
-                            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;">
-                            <p class="text-muted small">Logo actuel (uploadé)</p>
+                        <div class="mb-3 p-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border: 2px solid #f093fb;">
+                            <p class="mb-2 fw-bold" style="color: #333;">
+                                <i class="bi bi-image text-danger"></i> LOGO ACTUEL (uploadé):
+                            </p>
+                            <div class="text-center">
+                                <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" 
+                                     style="max-width: 200px; max-height: 200px; object-fit: contain; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 15px; cursor: pointer;"
+                                     onclick="window.open('{{ brand.logo.url }}', '_blank')">
+                            </div>
+                            <div class="mt-3 text-center">
+                                <a href="{{ brand.logo.url }}" target="_blank" class="btn btn-sm" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                    <i class="bi bi-zoom-in"></i> Voir en taille réelle
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="document.getElementById('clear_logo').checked = true; this.closest('.mb-3').querySelector('img').style.opacity = '0.3';">
+                                    <i class="bi bi-trash"></i> Supprimer le logo
+                                </button>
+                            </div>
+                            <input type="checkbox" name="clear_logo" id="clear_logo" style="display: none;">
                         </div>
                         {% endif %}
+                        <label class="form-label">
+                            <i class="bi bi-upload"></i> {% if brand and brand.logo %}Remplacer le logo{% else %}Ajouter un logo{% endif %}
+                        </label>
                         <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
                     </div>
                     
                     <div class="mb-3">
                         <label for="logo_url" class="form-label">OU Logo URL</label>
                         {% if brand and brand.logo_url %}
-                        <div class="mb-2">
-                            <img src="{{ brand.logo_url }}" alt="{{ brand.name }}" style="max-width: 200px; max-height: 100px; object-fit: contain;" onerror="this.style.display='none'">
-                            <p class="text-muted small">Logo actuel (URL)</p>
+                        <div class="mb-3 p-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border: 2px solid #667eea;">
+                            <p class="mb-2 fw-bold" style="color: #333;">
+                                <i class="bi bi-link-45deg text-primary"></i> LOGO ACTUEL (URL):
+                            </p>
+                            <div class="text-center">
+                                <img src="{{ brand.logo_url }}" alt="{{ brand.name }}" 
+                                     style="max-width: 200px; max-height: 200px; object-fit: contain; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 15px; cursor: pointer;"
+                                     onclick="window.open('{{ brand.logo_url }}', '_blank')"
+                                     onerror="this.parentElement.innerHTML='<span class=\'text-danger\'><i class=\'bi bi-exclamation-triangle\'></i> URL invalide ou inaccessible</span>'">
+                            </div>
+                            <div class="mt-3 text-center">
+                                <a href="{{ brand.logo_url }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-zoom-in"></i> Voir en taille réelle
+                                </a>
+                            </div>
                         </div>
                         {% endif %}
                         <input type="url" class="form-control" id="logo_url" name="logo_url" 

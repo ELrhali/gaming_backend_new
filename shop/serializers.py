@@ -291,15 +291,15 @@ class HeroSlideSerializer(serializers.ModelSerializer):
         return None
     
     def get_badge(self, obj):
-        """Retourne le badge à afficher"""
+        """Retourne le badge a afficher"""
         if obj.slide_type == 'category':
-            return '🏆 Catégorie en vedette'
+            return 'Categorie en vedette'
         elif obj.slide_type == 'subcategory':
-            return '📂 Sous-catégorie populaire'
+            return 'Sous-categorie populaire'
         elif obj.slide_type == 'product' and obj.product:
             if obj.product.discount_percentage > 0:
-                return f'⚡ -{obj.product.discount_percentage}% de réduction'
-            return '⭐ Produit en promotion'
+                return f'-{obj.product.discount_percentage}% de reduction'
+            return 'Produit en promotion'
         return None
     
     def get_price(self, obj):

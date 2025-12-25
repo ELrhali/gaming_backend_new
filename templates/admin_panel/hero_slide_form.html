@@ -92,15 +92,66 @@
                                 <i class="bi bi-phone"></i> <strong>Mobile:</strong> L'image sera centrée, placez le sujet au centre
                             </small>
                         </div>
+                        
+                        {% if slide and slide.custom_image %}
+                        <div class="mb-3 p-3" style="background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%); border-radius: 12px; border: 2px solid #4facfe;">
+                            <p class="mb-2 fw-bold" style="color: #234e52;">
+                                <i class="bi bi-image text-info"></i> IMAGE PERSONNALISÉE ACTUELLE:
+                            </p>
+                            <div class="text-center">
+                                <img src="{{ slide.custom_image.url }}" alt="Image du slide" 
+                                     style="max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 10px; cursor: pointer;"
+                                     onclick="window.open('{{ slide.custom_image.url }}', '_blank')">
+                            </div>
+                            <div class="mt-3 text-center">
+                                <a href="{{ slide.custom_image.url }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="bi bi-zoom-in"></i> Voir en taille réelle
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="document.getElementById('clear_custom_image').checked = true; this.closest('.mb-3').querySelector('img').style.opacity = '0.3';">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </div>
+                            <input type="checkbox" name="clear_custom_image" id="clear_custom_image" style="display: none;">
+                        </div>
+                        {% elif slide %}
+                        <div class="mb-3 p-3" style="background: #d4edda; border-radius: 12px; border: 2px solid #28a745;">
+                            <p class="mb-2 fw-bold" style="color: #155724;">
+                                <i class="bi bi-link-45deg text-success"></i> IMAGE DE L'ÉLÉMENT LIÉ:
+                            </p>
+                            <div class="text-center">
+                                {% if slide.slide_type == 'category' and slide.category and slide.category.image %}
+                                    <img src="{{ slide.category.image.url }}" alt="{{ slide.category.name }}" 
+                                         style="max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 10px;">
+                                    <p class="mt-2 text-muted small">Image provenant de la catégorie: <strong>{{ slide.category.name }}</strong></p>
+                                {% elif slide.slide_type == 'subcategory' and slide.subcategory and slide.subcategory.image %}
+                                    <img src="{{ slide.subcategory.image.url }}" alt="{{ slide.subcategory.name }}" 
+                                         style="max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 10px;">
+                                    <p class="mt-2 text-muted small">Image provenant de la sous-catégorie: <strong>{{ slide.subcategory.name }}</strong></p>
+                                {% elif slide.slide_type == 'product' and slide.product %}
+                                    {% with main_img=slide.product.get_main_image %}
+                                    {% if main_img %}
+                                    <img src="{{ main_img.url }}" alt="{{ slide.product.name }}" 
+                                         style="max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); background: white; padding: 10px;">
+                                    <p class="mt-2 text-muted small">Image provenant du produit: <strong>{{ slide.product.name }}</strong></p>
+                                    {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <div class="text-warning py-3">
+                                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                                        <p class="mb-0">L'élément lié n'a pas d'image</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <label class="form-label mt-2">
+                            <i class="bi bi-upload"></i> {% if slide and slide.custom_image %}Remplacer l'image{% else %}Ajouter une image personnalisée{% endif %}
+                        </label>
                         {{ form.custom_image }}
                         <small class="form-text text-muted">Laissez vide pour utiliser l'image de l'élément sélectionné</small>
                         {% if form.custom_image.errors %}
                             <div class="text-danger">{{ form.custom_image.errors }}</div>
-                        {% endif %}
-                        {% if slide and slide.custom_image %}
-                            <div class="mt-2">
-                                <img src="{{ slide.custom_image.url }}" alt="Image actuelle" style="max-height: 150px;" class="img-thumbnail">
-                            </div>
                         {% endif %}
                     </div>
 

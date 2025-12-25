@@ -157,7 +157,7 @@ class ExcelImporter:
                 slug=slugify(name),
                 is_active=True
             )
-            print(f"✅ Catégorie '{name}' créée automatiquement")
+            print(f"[OK] Categorie '{name}' creee automatiquement")
         
         return category
     
@@ -195,7 +195,7 @@ class ExcelImporter:
                 slug=slug,
                 is_active=True
             )
-            print(f"✅ Sous-catégorie '{normalized_name}' créée automatiquement dans {category.name}")
+            print(f"[OK] Sous-categorie '{normalized_name}' creee automatiquement dans {category.name}")
         
         return subcategory
     

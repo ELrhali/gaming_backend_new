@@ -330,7 +330,7 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "dark_mode_theme": "cyborg",
     
-    # Classes CSS pour les boutons
+    # Button classes
     "button_classes": {
         "primary": "btn-primary",
         "secondary": "btn-secondary",
@@ -342,4 +342,7 @@ JAZZMIN_UI_TWEAKS = {
     
     # Actions
     "actions_sticky_top": True,
+    
+    # Custom CSS
+    "custom_css": "admin/css/custom_admin.css",
 }
