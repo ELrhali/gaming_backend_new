@@ -3,9 +3,9 @@
 deployment:
   tasks:
     # Activation de l'environnement virtuel et installation des dépendances
-    - export VIRTUALENV=/home/mafourn2/virtualenv/backend/3.11
+    - export VIRTUALENV=/home/gobackma/virtualenv/backend/3.11
     - export PATH=$VIRTUALENV/bin:$PATH
-    - cd /home/mafourn2/backend
+    - cd /home/gobackma/backend
     - pip install -r requirements.txt
     # Migrations de base de données
     - python manage.py migrate --noinput

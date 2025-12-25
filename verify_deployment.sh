@@ -4,7 +4,7 @@
 # À exécuter sur le serveur après le déploiement
 
 echo "================================================"
-echo "  Vérification Post-Déploiement Goback Backend"
+echo "  Vérification Post-Déploiement Gaming Backend"
 echo "================================================"
 echo ""
 
@@ -42,35 +42,35 @@ check_warn() {
 }
 
 echo -e "${BLUE}[1/10] Vérification des répertoires...${NC}"
-test -d "/home/gobagma/goback_backend"
+test -d "/home/gobackma/gaming_backend"
 check "Répertoire backend existe"
 
-test -d "/home/gobagma/venv"
+test -d "/home/gobackma/venv"
 check "Environnement virtuel existe"
 
-test -d "/home/gobagma/public_html/backend/staticfiles"
+test -d "/home/gobackma/public_html/backend/staticfiles"
 check "Répertoire staticfiles existe"
 
-test -d "/home/gobagma/public_html/backend/media"
+test -d "/home/gobackma/public_html/backend/media"
 check "Répertoire media existe"
 
-test -d "/home/gobagma/logs"
+test -d "/home/gobackma/logs"
 check "Répertoire logs existe"
 
 echo ""
 echo -e "${BLUE}[2/10] Vérification des fichiers de configuration...${NC}"
-test -f "/home/gobagma/goback_backend/.env"
+test -f "/home/gobackma/gaming_backend/.env"
 check "Fichier .env existe"
 
-test -f "/home/gobagma/goback_backend/manage.py"
+test -f "/home/gobackma/gaming_backend/manage.py"
 check "Fichier manage.py existe"
 
-test -f "/home/gobagma/goback_backend/gunicorn_config.py"
+test -f "/home/gobackma/gaming_backend/gunicorn_config.py"
 check "Configuration Gunicorn existe"
 
 echo ""
 echo -e "${BLUE}[3/10] Vérification Python et packages...${NC}"
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 
 python3 --version > /dev/null 2>&1
 check "Python est installé"
@@ -86,7 +86,7 @@ check "PyMySQL est installé"
 
 echo ""
 echo -e "${BLUE}[4/10] Vérification de la base de données...${NC}"
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 
 python manage.py check --database default > /dev/null 2>&1
 check "Connexion base de données OK"
@@ -99,7 +99,7 @@ echo -e "${BLUE}[5/10] Vérification des services...${NC}"
 systemctl is-active nginx > /dev/null 2>&1
 check "Nginx est actif"
 
-supervisorctl status goback | grep -q "RUNNING"
+supervisorctl status gaming | grep -q "RUNNING"
 check "Gunicorn (via Supervisor) est actif"
 
 echo ""
@@ -115,10 +115,10 @@ check_warn "Port 443 (HTTPS) écoute"
 
 echo ""
 echo -e "${BLUE}[7/10] Vérification des fichiers statiques...${NC}"
-test -d "/home/gobagma/public_html/backend/staticfiles/admin"
+test -d "/home/gobackma/public_html/backend/staticfiles/admin"
 check "Fichiers static admin collectés"
 
-COUNT=$(find /home/gobagma/public_html/backend/staticfiles -type f | wc -l)
+COUNT=$(find /home/gobackma/public_html/backend/staticfiles -type f | wc -l)
 if [ $COUNT -gt 10 ]; then
     echo -e "${GREEN}✓ OK${NC} - $COUNT fichiers statiques trouvés"
     ((PASS++))
@@ -129,13 +129,13 @@ fi
 
 echo ""
 echo -e "${BLUE}[8/10] Vérification des permissions...${NC}"
-test -r "/home/gobagma/goback_backend/manage.py"
+test -r "/home/gobackma/gaming_backend/manage.py"
 check "Permissions lecture backend OK"
 
-test -w "/home/gobagma/logs"
+test -w "/home/gobackma/logs"
 check "Permissions écriture logs OK"
 
-test -w "/home/gobagma/public_html/backend/media"
+test -w "/home/gobackma/public_html/backend/media"
 check "Permissions écriture media OK"
 
 echo ""
@@ -152,10 +152,10 @@ check_warn "Admin panel accessible"
 echo ""
 echo -e "${BLUE}[10/10] Vérification SSL/HTTPS...${NC}"
 if [ -d "/etc/letsencrypt/live" ]; then
-    ls /etc/letsencrypt/live/ | grep -q "api.gobag.ma"
-    check_warn "Certificat SSL installé pour api.gobag.ma"
+    ls /etc/letsencrypt/live/ | grep -q "api.goback.ma"
+    check_warn "Certificat SSL installé pour api.goback.ma"
 else
-    echo -e "${YELLOW}⚠ WARN${NC} - SSL non configuré (exécuter: sudo certbot --nginx -d api.gobag.ma)"
+    echo -e "${YELLOW}⚠ WARN${NC} - SSL non configuré (exécuter: sudo certbot --nginx -d api.goback.ma)"
     ((WARN++))
 fi
 
@@ -172,10 +172,10 @@ if [ $FAIL -eq 0 ]; then
     echo -e "${GREEN}✓ SUCCÈS - Le déploiement semble correct!${NC}"
     echo ""
     echo "Prochaines étapes recommandées:"
-    echo "  1. Configurer SSL: sudo certbot --nginx -d api.gobag.ma"
-    echo "  2. Tester l'API: curl https://api.gobag.ma/api/products/"
+    echo "  1. Configurer SSL: sudo certbot --nginx -d api.goback.ma"
+    echo "  2. Tester l'API: curl https://api.goback.ma/api/products/"
     echo "  3. Configurer le backup: crontab -e"
-    echo "  4. Accéder à l'admin: https://api.gobag.ma/admin/"
+    echo "  4. Accéder à l'admin: https://api.goback.ma/admin/"
     exit 0
 else
     echo -e "${RED}✗ ERREURS DÉTECTÉES - Vérifiez les logs${NC}"
@@ -183,7 +183,7 @@ else
     echo "Commandes de diagnostic:"
     echo "  sudo supervisorctl status"
     echo "  sudo systemctl status nginx"
-    echo "  tail -f /home/gobagma/logs/gunicorn_error.log"
-    echo "  tail -f /home/gobagma/logs/nginx_error.log"
+    echo "  tail -f /home/gobackma/logs/gunicorn_error.log"
+    echo "  tail -f /home/gobackma/logs/nginx_error.log"
     exit 1
 fi

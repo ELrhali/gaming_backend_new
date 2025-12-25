@@ -9,8 +9,8 @@ Tous les fichiers nécessaires pour déployer votre backend Django sur Nidohost 
 1. **Configuration Production**:
    - `.env.production` - Template variables d'environnement
    - `gunicorn_config.py` - Configuration WSGI server
-   - `supervisor_goback.conf` - Configuration process manager
-   - `nginx_goback.conf` - Configuration web server
+   - `supervisor_gaming.conf` - Configuration process manager
+   - `nginx_gaming.conf` - Configuration web server
 
 2. **Scripts d'Automation**:
    - `deploy.sh` - Déploiement automatisé Linux
@@ -33,7 +33,7 @@ Tous les fichiers nécessaires pour déployer votre backend Django sur Nidohost 
 ✅ 15 fichiers ajoutés
 ✅ Commit créé: "Configuration production complète pour déploiement Nidohost - Backend prêt"
 ✅ Pushé vers GitHub: master branch
-✅ Repository: https://github.com/ELrhali/backend_goback.git
+✅ Repository: https://github.com/ELrhali/backend_gaming.git
 ```
 
 ---
@@ -45,7 +45,7 @@ Tous les fichiers nécessaires pour déployer votre backend Django sur Nidohost 
 Ouvrez PowerShell et exécutez:
 
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 ```
 
@@ -62,14 +62,14 @@ Ce script va:
 
 2. **Se connecter**:
    - Protocole: SFTP
-   - Hôte: `176.9.31.158`
+   - Hôte: `178.63.126.247`
    - Port: `22`
-   - Nom d'utilisateur: `gobagma`
+   - Nom d'utilisateur: `gobackma`
    - Mot de passe: `3$lL_L3J~UU*`
 
 3. **Transférer les fichiers**:
-   - `goback_db_backup_XXXXXX.sql` → `/home/gobagma/`
-   - `media_XXXXXX.zip` → `/home/gobagma/`
+   - `gaming_db_backup_XXXXXX.sql` → `/home/gobackma/`
+   - `media_XXXXXX.zip` → `/home/gobackma/`
 
 ### ÉTAPE 3: Déploiement sur le Serveur - 2 heures
 
@@ -118,21 +118,21 @@ Ce guide contient TOUTES les commandes à exécuter dans l'ordre, avec:
 
 ### Connexion Serveur
 ```
-IP:       176.9.31.158
-Username: gobagma
+IP:       178.63.126.247
+Username: gobackma
 Password: 3$lL_L3J~UU*
 ```
 
 ### URLs Finales
 ```
-Backend API:   https://api.gobag.ma
-Admin Panel:   https://api.gobag.ma/admin/
-Frontend:      https://gobag.ma
+Backend API:   https://api.goback.ma
+Admin Panel:   https://api.goback.ma/admin/
+Frontend:      https://goback.ma
 ```
 
 ### Repository GitHub
 ```
-Backend:  https://github.com/ELrhali/backend_goback.git
+Backend:  https://github.com/ELrhali/backend_gaming.git
 Branch:   master
 Status:   ✅ À jour avec les fichiers de production
 ```
@@ -192,7 +192,7 @@ Status:   ✅ À jour avec les fichiers de production
 
 2. **Changer les mots de passe** dans le fichier `.env` du serveur
 
-3. **Configurer le DNS** pour `api.gobag.ma` → `176.9.31.158`
+3. **Configurer le DNS** pour `api.goback.ma` → `178.63.126.247`
 
 4. **Installer le SSL** avec `certbot`
 
@@ -216,13 +216,13 @@ Status:   ✅ À jour avec les fichiers de production
 - Consultez le fichier INSTRUCTIONS.txt créé
 
 ### Problème de Connexion SSH
-- Vérifiez l'IP: `176.9.31.158`
-- Vérifiez le username: `gobagma`
+- Vérifiez l'IP: `178.63.126.247`
+- Vérifiez le username: `gobackma`
 - Vérifiez le mot de passe: `3$lL_L3J~UU*`
 
 ### Problème sur le Serveur
 - Consultez [COMMANDES_UTILES.md](./COMMANDES_UTILES.md) - Section "Diagnostic"
-- Vérifiez les logs: `/home/gobagma/logs/`
+- Vérifiez les logs: `/home/gobackma/logs/`
 - Exécutez `verify_deployment.sh`
 
 ### Problème de Documentation
@@ -237,14 +237,14 @@ Status:   ✅ À jour avec les fichiers de production
 Une fois le backend déployé et fonctionnel, vous pourrez:
 
 1. **Déployer le Frontend sur Vercel**:
-   - Repository: `goback_frontend`
-   - Variable d'env: `NEXT_PUBLIC_API_URL=https://api.gobag.ma`
-   - Domaine: `gobag.ma`
+   - Repository: `gaming_frontend`
+   - Variable d'env: `NEXT_PUBLIC_API_URL=https://api.goback.ma`
+   - Domaine: `goback.ma`
 
 2. **Configurer le DNS Complet**:
-   - `api.gobag.ma` → Nidohost (Backend)
-   - `gobag.ma` → Vercel (Frontend)
-   - `www.gobag.ma` → Vercel (Frontend)
+   - `api.goback.ma` → Nidohost (Backend)
+   - `goback.ma` → Vercel (Frontend)
+   - `www.goback.ma` → Vercel (Frontend)
 
 3. **Tests End-to-End**:
    - Commande depuis le site
@@ -279,7 +279,7 @@ Une fois le backend déployé et fonctionnel, vous pourrez:
 ### Option 1: Déploiement Immédiat
 
 1. Ouvrez PowerShell
-2. Exécutez: `cd C:\Users\MSI\Desktop\goback\goback_backend`
+2. Exécutez: `cd C:\Users\MSI\Desktop\gaming\gaming_backend`
 3. Exécutez: `.\prepare_upload.ps1`
 4. Ouvrez: [GUIDE_RAPIDE.md](./GUIDE_RAPIDE.md)
 5. Suivez les étapes!
@@ -297,7 +297,7 @@ Une fois le backend déployé et fonctionnel, vous pourrez:
 
 ```
 ┌─────────────────────────────────────────┐
-│   BACKEND GOBACK - READY TO DEPLOY     │
+│   BACKEND gaming - READY TO DEPLOY     │
 ├─────────────────────────────────────────┤
 │ Configuration:     ✅ 100% Complete     │
 │ Documentation:     ✅ 100% Complete     │
@@ -316,17 +316,17 @@ Voici LA séquence pour démarrer:
 
 ```powershell
 # 1. Préparation (Windows)
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 
 # 2. Connexion (SSH)
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 # Password: 3$lL_L3J~UU*
 
 # 3. Clone (sur le serveur)
-cd /home/gobagma
-git clone https://github.com/ELrhali/backend_goback.git
-cd backend_goback
+cd /home/gobackma
+git clone https://github.com/ELrhali/backend_gaming.git
+cd backend_gaming
 
 # 4. Suivre le guide
 # Ouvrir: GUIDE_RAPIDE.md
@@ -352,7 +352,7 @@ Vous avez maintenant:
 
 ## 📞 LIENS UTILES
 
-- **Repository GitHub**: https://github.com/ELrhali/backend_goback.git
+- **Repository GitHub**: https://github.com/ELrhali/backend_gaming.git
 - **WinSCP Download**: https://winscp.net/
 - **FileZilla Download**: https://filezilla-project.org/
 - **Let's Encrypt**: https://letsencrypt.org/

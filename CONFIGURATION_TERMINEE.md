@@ -1,4 +1,4 @@
-# ✅ CONFIGURATION TERMINÉE - BACKEND GOBACK
+# ✅ CONFIGURATION TERMINÉE - BACKEND gaming
 
 ## 🎉 Félicitations!
 
@@ -11,8 +11,8 @@ Tous les fichiers nécessaires pour le déploiement du backend Django sur Nidoho
 ### Configuration Production
 1. ✅ `.env.production` - Template variables d'environnement
 2. ✅ `gunicorn_config.py` - Configuration Gunicorn (WSGI server)
-3. ✅ `supervisor_goback.conf` - Configuration Supervisor (process manager)
-4. ✅ `nginx_goback.conf` - Configuration Nginx (web server/reverse proxy)
+3. ✅ `supervisor_gaming.conf` - Configuration Supervisor (process manager)
+4. ✅ `nginx_gaming.conf` - Configuration Nginx (web server/reverse proxy)
 
 ### Scripts d'Automation
 5. ✅ `deploy.sh` - Script de déploiement automatisé (Linux)
@@ -38,7 +38,7 @@ Tous les fichiers nécessaires pour le déploiement du backend Django sur Nidoho
 Sur Windows, exécutez:
 
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 ```
 
@@ -52,8 +52,8 @@ Ce script va:
 
 1. **Export de la base de données**:
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
-mysqldump -u root -p goback_db > goback_db_backup.sql
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
+mysqldump -u root -p gaming_db > gaming_db_backup.sql
 ```
 
 2. **Compression des media**:
@@ -109,12 +109,12 @@ Selon votre besoin:
 ## 🔐 Informations de Connexion
 
 ```
-Serveur: 176.9.31.158
-Username: gobagma
+Serveur: 178.63.126.247
+Username: gobackma
 Password: 3$lL_L3J~UU*
 
-Backend URL: https://api.gobag.ma
-Frontend URL: https://gobag.ma
+Backend URL: https://api.goback.ma
+Frontend URL: https://goback.ma
 ```
 
 ---
@@ -154,12 +154,12 @@ Frontend URL: https://gobag.ma
    └─> Tests
 
 3. DNS
-   └─> Configurer A record pour api.gobag.ma
+   └─> Configurer A record pour api.goback.ma
    └─> Attendre propagation (2-48h)
 
 4. Frontend (Vercel)
    └─> Deploy sur Vercel
-   └─> Configurer domaine gobag.ma
+   └─> Configurer domaine goback.ma
    └─> Tests end-to-end
 ```
 
@@ -194,7 +194,7 @@ Frontend URL: https://gobag.ma
 
 ```bash
 # Sur votre PC Windows
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 
 # Puis suivre: GUIDE_RAPIDE.md
@@ -214,8 +214,8 @@ cd C:\Users\MSI\Desktop\goback\goback_backend
 ### Problèmes Courants
 
 1. **Erreur de connexion SSH**
-   - Vérifiez l'IP: 176.9.31.158
-   - Vérifiez le username: gobagma
+   - Vérifiez l'IP: 178.63.126.247
+   - Vérifiez le username: gobackma
    - Mot de passe: 3$lL_L3J~UU*
 
 2. **Erreur MySQL**
@@ -242,7 +242,7 @@ cd C:\Users\MSI\Desktop\goback\goback_backend
 
 1. **Générer une SECRET_KEY unique** pour la production
 2. **Changer les mots de passe** MySQL avec des valeurs sécurisées
-3. **Configurer le DNS** pour api.gobag.ma
+3. **Configurer le DNS** pour api.goback.ma
 4. **Installer le SSL** avec Let's Encrypt
 5. **Configurer les backups** automatiques
 
@@ -260,8 +260,8 @@ cd C:\Users\MSI\Desktop\goback\goback_backend
 
 À la fin du déploiement, vous aurez:
 
-✅ Backend Django sur **https://api.gobag.ma**
-✅ Admin panel sur **https://api.gobag.ma/admin/**
+✅ Backend Django sur **https://api.goback.ma**
+✅ Admin panel sur **https://api.goback.ma/admin/**
 ✅ API REST fonctionnelle
 ✅ HTTPS avec certificat SSL
 ✅ Backups automatiques
@@ -306,20 +306,20 @@ Production:     ⏳ Pas encore déployé
 
 ### Sur Windows (préparation)
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 ```
 
 ### Sur le Serveur (déploiement)
 ```bash
-ssh gobagma@176.9.31.158
-cd /home/gobagma && git clone <your-repo-url> goback_backend
-cd goback_backend && chmod +x deploy.sh && ./deploy.sh
+ssh gobackma@178.63.126.247
+cd /home/gobackma && git clone <your-repo-url> gaming_backend
+cd gaming_backend && chmod +x deploy.sh && ./deploy.sh
 ```
 
 ### Vérification
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 ```

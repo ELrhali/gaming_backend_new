@@ -10,7 +10,7 @@ django.setup()
 from shop.models import Collection, Category, SubCategory, Brand, Product
 
 # Configuration
-EXCEL_FILE = r'C:\Users\MSI\Desktop\goback\old_data.xlsx'
+EXCEL_FILE = r'C:\Users\MSI\Desktop\gaming\old_data.xlsx'
 
 def main():
     print("\n" + "=" * 80)

@@ -7,8 +7,8 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host ""
 
 # Variables
-$BackendDir = "C:\Users\MSI\Desktop\goback\goback_backend"
-$ExportDir = "C:\Users\MSI\Desktop\goback_export"
+$BackendDir = "C:\Users\MSI\Desktop\gaming\gaming_backend"
+$ExportDir = "C:\Users\MSI\Desktop\gaming_export"
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
 # Créer le répertoire d'export
@@ -22,13 +22,13 @@ Write-Host "  ✓ Répertoire créé: $ExportDir" -ForegroundColor Green
 # Export de la base de données
 Write-Host ""
 Write-Host "[2/5] Export de la base de données MySQL..." -ForegroundColor Yellow
-$DbBackupFile = "$ExportDir\goback_db_backup_$Timestamp.sql"
+$DbBackupFile = "$ExportDir\gaming_db_backup_$Timestamp.sql"
 
 # Vérifier si MySQL est disponible
 $mysqlDump = Get-Command mysqldump -ErrorAction SilentlyContinue
 if ($mysqlDump) {
     Write-Host "  Entrez le mot de passe MySQL root:" -ForegroundColor Cyan
-    mysqldump -u root -p goback_db > $DbBackupFile
+    mysqldump -u root -p gaming_db > $DbBackupFile
     
     if (Test-Path $DbBackupFile) {
         $dbSize = (Get-Item $DbBackupFile).Length / 1MB
@@ -65,41 +65,41 @@ Write-Host "[4/5] Création du fichier d'instructions..." -ForegroundColor Yello
 
 $Instructions = @"
 ========================================================
-  INSTRUCTIONS DE TRANSFERT - GOBACK BACKEND
+  INSTRUCTIONS DE TRANSFERT - gaming BACKEND
 ========================================================
 
 Date: $(Get-Date -Format "dd/MM/yyyy HH:mm:ss")
 
 📦 FICHIERS À TRANSFÉRER:
 --------------------------
-1. goback_db_backup_$Timestamp.sql  → Base de données
+1. gaming_db_backup_$Timestamp.sql  → Base de données
 2. media_$Timestamp.zip             → Fichiers media
 
 🔐 INFORMATIONS SERVEUR:
 --------------------------
-IP:       176.9.31.158
-Username: gobagma
+IP:       178.63.126.247
+Username: gobackma
 Password: 3`$lL_L3J~UU*
 
 📋 ÉTAPES SUR LE SERVEUR:
 --------------------------
 
 1. CONNEXION SSH:
-   ssh gobagma@176.9.31.158
+   ssh gobackma@178.63.126.247
 
 2. IMPORT BASE DE DONNÉES:
-   cd /home/gobagma
-   mysql -u gobagma_goback_user -p gobagma_goback_db < goback_db_backup_$Timestamp.sql
-   rm goback_db_backup_$Timestamp.sql
+   cd /home/gobackma
+   mysql -u gobackma_gaming_user -p gobackma_gaming_db < gaming_db_backup_$Timestamp.sql
+   rm gaming_db_backup_$Timestamp.sql
 
 3. EXTRACTION MEDIA:
-   mkdir -p /home/gobagma/public_html/backend/media
-   unzip media_$Timestamp.zip -d /home/gobagma/public_html/backend/media/
+   mkdir -p /home/gobackma/public_html/backend/media
+   unzip media_$Timestamp.zip -d /home/gobackma/public_html/backend/media/
    rm media_$Timestamp.zip
-   chmod -R 755 /home/gobagma/public_html/backend/media
+   chmod -R 755 /home/gobackma/public_html/backend/media
 
 4. REDÉMARRAGE:
-   sudo supervisorctl restart goback
+   sudo supervisorctl restart gaming
 
 🌐 MÉTHODES DE TRANSFERT:
 --------------------------
@@ -107,22 +107,22 @@ Password: 3`$lL_L3J~UU*
 Option A - WinSCP (Recommandé):
 1. Télécharger: https://winscp.net/
 2. Protocole: SFTP
-3. Hôte: 176.9.31.158
+3. Hôte: 178.63.126.247
 4. Port: 22
-5. Nom d'utilisateur: gobagma
+5. Nom d'utilisateur: gobackma
 6. Mot de passe: 3`$lL_L3J~UU*
 
 Option B - FileZilla:
 1. Télécharger: https://filezilla-project.org/
 2. Protocole: SFTP
-3. Hôte: sftp://176.9.31.158
-4. Utilisateur: gobagma
+3. Hôte: sftp://178.63.126.247
+4. Utilisateur: gobackma
 5. Mot de passe: 3`$lL_L3J~UU*
 6. Port: 22
 
 Option C - SCP (PowerShell):
-scp goback_db_backup_$Timestamp.sql gobagma@176.9.31.158:/home/gobagma/
-scp media_$Timestamp.zip gobagma@176.9.31.158:/home/gobagma/
+scp gaming_db_backup_$Timestamp.sql gobackma@178.63.126.247:/home/gobackma/
+scp media_$Timestamp.zip gobackma@178.63.126.247:/home/gobackma/
 
 📝 NOTES:
 --------------------------

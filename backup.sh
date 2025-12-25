@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Script de backup automatique pour Goback Backend
+# Script de backup automatique pour Gaming Backend
 # À exécuter régulièrement via cron
 
 # Variables
-BACKUP_DIR="/home/gobagma/backup"
+BACKUP_DIR="/home/gobackma/backup"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DB_NAME="gobagma_goback_db"
-DB_USER="gobagma_goback_user"
+DB_NAME="gobackma_gaming_db"
+DB_USER="gobackma_gaming_user"
 DB_PASSWORD="VotreMotDePasseSecurisé123!"
 
 # Créer le répertoire de backup s'il n'existe pas
@@ -19,7 +19,7 @@ mysqldump -u $DB_USER -p$DB_PASSWORD $DB_NAME | gzip > $BACKUP_DIR/db_backup_$TI
 
 # Backup des fichiers media
 echo "Backup des fichiers media..."
-tar -czf $BACKUP_DIR/media_backup_$TIMESTAMP.tar.gz /home/gobagma/public_html/backend/media/
+tar -czf $BACKUP_DIR/media_backup_$TIMESTAMP.tar.gz /home/gobackma/public_html/backend/media/
 
 # Garder seulement les 7 derniers backups
 echo "Nettoyage des anciens backups..."

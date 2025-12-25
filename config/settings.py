@@ -1,5 +1,5 @@
 """
-Django settings for Goback project.
+Django settings for gaming project.
 """
 
 from pathlib import Path
@@ -27,8 +27,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Configuration stricte pour la production
 ALLOWED_HOSTS = [
-    "api.gobag.ma",
-    "www.api.gobag.ma",
+    "api.goback.ma",
+    "www.api.goback.ma",
     "localhost",
     "127.0.0.1",
     "192.168.3.55",
@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'config.db_backend',  # Utiliser notre backend personnalisé
-        'NAME': os.getenv('DB_NAME', 'goback_db'),
+        'NAME': os.getenv('DB_NAME', 'gaming_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
@@ -164,17 +164,17 @@ cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://1
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://goback-frontend-11uj.vercel.app",
-    "https://www.gobag.ma",
+    "https://gaming-frontend-11uj.vercel.app",
+    "https://www.goback.ma",
     "http://192.168.3.55:3000",
-    "https://gobag.ma",
-    "https://www.gobag.ma",
+    "https://goback.ma",
+    "https://www.goback.ma",
 ]
 
 # ALLOWED_HOSTS : uniquement les domaines backend
 ALLOWED_HOSTS = [
-    "api.gobag.ma",
-    "www.api.gobag.ma",
+    "api.goback.ma",
+    "www.api.goback.ma",
     "localhost",
     "127.0.0.1",
     "192.168.3.55",
@@ -182,8 +182,8 @@ ALLOWED_HOSTS = [
 CORS_ALLOW_ALL_ORIGINS = False
 
 
-# CSRF settings pour api.gobag.ma
-CSRF_TRUSTED_ORIGINS = ['https://api.gobag.ma']
+# CSRF settings pour api.goback.ma
+CSRF_TRUSTED_ORIGINS = ['https://api.goback.ma']
 
 # Configuration pour proxy inverse (reverse proxy)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -216,29 +216,29 @@ LOGOUT_REDIRECT_URL = '/admin-panel/login/'
 # Jazzmin settings - Interface admin moderne et claire
 JAZZMIN_SETTINGS = {
     # Titres et branding
-    "site_title": "Goback Admin",
-    "site_header": "Administration de Goback",
-    "site_brand": "Goback Admin",
+    "site_title": "gaming Admin",
+    "site_header": "Administration de gaming",
+    "site_brand": "gaming Admin",
     "site_logo": None,
     "login_logo": None,
     "login_logo_dark": None,
     "site_logo_classes": "img-circle",
     "site_icon": None,
     "welcome_sign": "Bienvenue dans le panneau d'administration",
-    "copyright": "Goback © 2025",
+    "copyright": "gaming © 2025",
     "search_model": ["shop.Product", "shop.Category", "shop.Brand", "orders.Order"],
     
     # Top Menu
     "topmenu_links": [
         {"name": "Accueil", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Voir le site", "url": "https://gobag.ma", "new_window": True},
+        {"name": "Voir le site", "url": "https://goback.ma", "new_window": True},
         {"model": "auth.User"},
         {"app": "shop"},
     ],
     
     # User Menu
     "usermenu_links": [
-        {"name": "Voir le site", "url": "https://gobag.ma", "new_window": True},
+        {"name": "Voir le site", "url": "https://goback.ma", "new_window": True},
         {"model": "auth.user", "icon": "fas fa-user"},
     ],
     

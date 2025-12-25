@@ -1,5 +1,5 @@
 """
-Passenger WSGI config for Goback project on Nidohost.
+Passenger WSGI config for gaming project on Nidohost.
 """
 import os
 import sys

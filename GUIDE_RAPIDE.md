@@ -3,18 +3,18 @@
 ## 📝 Informations de Connexion
 
 ```
-IP: 176.9.31.158
-Username: gobagma
+IP: 178.63.126.247
+Username: gobackma
 Password: 3$lL_L3J~UU*
-Backend URL: https://api.gobag.ma
-Frontend URL: https://gobag.ma
+Backend URL: https://api.goback.ma
+Frontend URL: https://goback.ma
 ```
 
 ## ⚡ Commandes Rapides
 
 ### 1. Connexion SSH
 ```bash
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 ```
 
 ### 2. Préparation du Serveur (première fois)
@@ -31,24 +31,24 @@ sudo mysql -u root
 
 Dans MySQL:
 ```sql
-CREATE DATABASE gobagma_goback_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobagma_goback_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseTresFort123!';
-GRANT ALL PRIVILEGES ON gobagma_goback_db.* TO 'gobagma_goback_user'@'localhost';
+CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseTresFort123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
 
 ### 3. Clone du Projet
 ```bash
-cd /home/gobagma
-git clone https://github.com/votre-repo/goback_backend.git
-cd goback_backend
+cd /home/gobackma
+git clone https://github.com/votre-repo/gaming_backend.git
+cd gaming_backend
 ```
 
 ### 4. Environnement Python
 ```bash
-python3.11 -m venv /home/gobagma/venv
-source /home/gobagma/venv/bin/activate
+python3.11 -m venv /home/gobackma/venv
+source /home/gobackma/venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -69,17 +69,17 @@ python3 -c "from django.core.management.utils import get_random_secret_key; prin
 **Sur Windows (local)**:
 ```powershell
 # Export DB
-cd C:\Users\MSI\Desktop\goback\goback_backend
-mysqldump -u root -p goback_db > goback_db_backup.sql
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
+mysqldump -u root -p gaming_db > gaming_db_backup.sql
 
 # Upload avec WinSCP ou:
-scp goback_db_backup.sql gobagma@176.9.31.158:/home/gobagma/
+scp gaming_db_backup.sql gobackma@178.63.126.247:/home/gobackma/
 ```
 
 **Sur le serveur**:
 ```bash
-mysql -u gobagma_goback_user -p gobagma_goback_db < /home/gobagma/goback_db_backup.sql
-rm /home/gobagma/goback_db_backup.sql
+mysql -u gobackma_gaming_user -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
+rm /home/gobackma/gaming_db_backup.sql
 ```
 
 ### 7. Transfer des Fichiers Media
@@ -87,7 +87,7 @@ rm /home/gobagma/goback_db_backup.sql
 **Sur Windows (local)**:
 ```powershell
 # Compresser
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 Compress-Archive -Path .\media\* -DestinationPath media.zip
 
 # Upload avec WinSCP ou FileZilla
@@ -95,19 +95,19 @@ Compress-Archive -Path .\media\* -DestinationPath media.zip
 
 **Sur le serveur**:
 ```bash
-mkdir -p /home/gobagma/public_html/backend/media
-unzip /home/gobagma/media.zip -d /home/gobagma/public_html/backend/media/
-rm /home/gobagma/media.zip
-chmod -R 755 /home/gobagma/public_html/backend/media
+mkdir -p /home/gobackma/public_html/backend/media
+unzip /home/gobackma/media.zip -d /home/gobackma/public_html/backend/media/
+rm /home/gobackma/media.zip
+chmod -R 755 /home/gobackma/public_html/backend/media
 ```
 
 ### 8. Django Setup
 ```bash
-cd /home/gobagma/goback_backend
-source /home/gobagma/venv/bin/activate
+cd /home/gobackma/gaming_backend
+source /home/gobackma/venv/bin/activate
 
 # Créer répertoires
-mkdir -p /home/gobagma/logs /home/gobagma/run /home/gobagma/public_html/backend
+mkdir -p /home/gobackma/logs /home/gobackma/run /home/gobackma/public_html/backend
 
 # Migrations et static
 python manage.py migrate
@@ -119,17 +119,17 @@ python manage.py createsuperuser
 
 ### 9. Supervisor (Gunicorn)
 ```bash
-sudo cp supervisor_goback.conf /etc/supervisor/conf.d/goback.conf
+sudo cp supervisor_gaming.conf /etc/supervisor/conf.d/gaming.conf
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start goback
+sudo supervisorctl start gaming
 sudo supervisorctl status
 ```
 
 ### 10. Nginx
 ```bash
-sudo cp nginx_goback.conf /etc/nginx/sites-available/goback
-sudo ln -s /etc/nginx/sites-available/goback /etc/nginx/sites-enabled/
+sudo cp nginx_gaming.conf /etc/nginx/sites-available/gaming
+sudo ln -s /etc/nginx/sites-available/gaming /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -137,7 +137,7 @@ sudo systemctl restart nginx
 ### 11. SSL Certificate
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d api.gobag.ma
+sudo certbot --nginx -d api.goback.ma
 ```
 
 ### 12. Firewall
@@ -152,30 +152,30 @@ sudo ufw status
 
 ### Redémarrer l'application
 ```bash
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ### Voir les logs
 ```bash
 # Gunicorn
-tail -f /home/gobagma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
 
 # Supervisor
-tail -f /home/gobagma/logs/supervisor_goback.log
+tail -f /home/gobackma/logs/supervisor_gaming.log
 
 # Nginx
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 ```
 
 ### Mettre à jour le code
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 git pull origin master
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ### Vérifier les services
@@ -187,8 +187,8 @@ netstat -tlnp | grep 8000
 
 ### Backup manuel
 ```bash
-chmod +x /home/gobagma/goback_backend/backup.sh
-/home/gobagma/goback_backend/backup.sh
+chmod +x /home/gobackma/gaming_backend/backup.sh
+/home/gobackma/gaming_backend/backup.sh
 ```
 
 ### Configurer backup automatique (cron)
@@ -198,7 +198,7 @@ crontab -e
 Ajouter:
 ```
 # Backup tous les jours à 2h du matin
-0 2 * * * /home/gobagma/goback_backend/backup.sh
+0 2 * * * /home/gobackma/gaming_backend/backup.sh
 ```
 
 ## 🧪 Tests
@@ -208,19 +208,19 @@ Ajouter:
 curl http://127.0.0.1:8000
 
 # Test API
-curl https://api.gobag.ma/api/products/
-curl https://api.gobag.ma/api/categories/
-curl https://api.gobag.ma/admin/
+curl https://api.goback.ma/api/products/
+curl https://api.goback.ma/api/categories/
+curl https://api.goback.ma/admin/
 ```
 
 ## 🌐 Configuration DNS
 
-Chez votre registrar (où gobag.ma est enregistré):
+Chez votre registrar (où goback.ma est enregistré):
 
 **Backend API**:
 - Type: A
 - Nom: api
-- Valeur: 176.9.31.158
+- Valeur: 178.63.126.247
 - TTL: 3600
 
 **Frontend** (après déploiement Vercel):
@@ -234,14 +234,14 @@ Chez votre registrar (où gobag.ma est enregistré):
 Une fois le backend opérationnel:
 
 1. Aller sur https://vercel.com
-2. Importer le repository `goback_frontend`
+2. Importer le repository `gaming_frontend`
 3. Configurer:
    - Framework: Next.js
    - Build Command: `npm run build`
    - Output Directory: `.next`
 4. Ajouter variable d'environnement:
-   - `NEXT_PUBLIC_API_URL=https://api.gobag.ma`
-5. Configurer le domaine `gobag.ma`
+   - `NEXT_PUBLIC_API_URL=https://api.goback.ma`
+5. Configurer le domaine `goback.ma`
 
 ## ✅ Checklist Rapide
 
@@ -264,24 +264,24 @@ Une fois le backend opérationnel:
 
 ### Error 502 Bad Gateway
 ```bash
-sudo supervisorctl status goback
-sudo supervisorctl restart goback
-tail -f /home/gobagma/logs/gunicorn_error.log
+sudo supervisorctl status gaming
+sudo supervisorctl restart gaming
+tail -f /home/gobackma/logs/gunicorn_error.log
 ```
 
 ### Permission Denied
 ```bash
-sudo chown -R gobagma:gobagma /home/gobagma/goback_backend
-chmod -R 755 /home/gobagma/public_html/backend
+sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
+chmod -R 755 /home/gobackma/public_html/backend
 ```
 
 ### Database Connection Error
 ```bash
 # Vérifier les credentials dans .env
-nano /home/gobagma/goback_backend/.env
+nano /home/gobackma/gaming_backend/.env
 
 # Tester la connexion MySQL
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 ```
 
 ## 📞 Support

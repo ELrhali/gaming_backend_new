@@ -13,8 +13,8 @@ django.setup()
 from shop.models import Collection, Category, SubCategory, Brand, Product, ProductImage
 
 # Configuration
-EXCEL_FILE = r'C:\Users\MSI\Desktop\goback\old_data.xlsx'
-MEDIA_ROOT = Path(r'C:\Users\MSI\Desktop\goback\goback_backend\media')
+EXCEL_FILE = r'C:\Users\MSI\Desktop\gaming\old_data.xlsx'
+MEDIA_ROOT = Path(r'C:\Users\MSI\Desktop\gaming\gaming_backend\media')
 
 def parse_description(description):
     """Extrait les specifications depuis la description"""

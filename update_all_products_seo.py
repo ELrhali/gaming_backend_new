@@ -35,11 +35,11 @@ def update_products_seo():
         
         # Générer un Meta Title optimisé
         if not has_meta_title:
-            # Format: [Nom du Produit] - [Catégorie] | Gobag.ma
+            # Format: [Nom du Produit] - [Catégorie] | goback.ma
             if product.category:
-                meta_title = f"{product.name[:50]} - {product.category.name} | Gobag.ma"
+                meta_title = f"{product.name[:50]} - {product.category.name} | goback.ma"
             else:
-                meta_title = f"{product.name[:60]} | Gobag.ma"
+                meta_title = f"{product.name[:60]} | goback.ma"
             product.meta_title = meta_title[:200]
         
         # Générer une Meta Description optimisée
@@ -79,7 +79,7 @@ def update_products_seo():
     print(f"   • Mis à jour: {updated}")
     print()
     print("📊 Résumé SEO:")
-    print(f"   • Meta Title: Format '[Produit] - [Catégorie] | Gobag.ma'")
+    print(f"   • Meta Title: Format '[Produit] - [Catégorie] | goback.ma'")
     print(f"   • Meta Description: 150-160 caractères avec promotion et livraison")
     print(f"   • Keywords: Optimisé pour sacs, valises et bagages")
     print()

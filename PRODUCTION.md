@@ -1,10 +1,10 @@
-# 🏭 Goback Backend - Configuration Production
+# 🏭 Gaming Backend - Configuration Production
 
 ## 🌐 URLs de Production
 
-- **Backend API**: https://api.gobag.ma
-- **Admin Panel**: https://api.gobag.ma/admin/
-- **Frontend**: https://gobag.ma
+- **Backend API**: https://api.goback.ma
+- **Admin Panel**: https://api.goback.ma/admin/
+- **Frontend**: https://goback.ma
 
 ## 📦 Fichiers de Déploiement
 
@@ -12,8 +12,8 @@
 
 1. **`.env.production`** - Template des variables d'environnement
 2. **`gunicorn_config.py`** - Configuration Gunicorn (WSGI server)
-3. **`supervisor_goback.conf`** - Configuration Supervisor (process manager)
-4. **`nginx_goback.conf`** - Configuration Nginx (web server)
+3. **`supervisor_gaming.conf`** - Configuration Supervisor (process manager)
+4. **`nginx_gaming.conf`** - Configuration Nginx (web server)
 5. **`deploy.sh`** - Script de déploiement automatisé
 6. **`backup.sh`** - Script de backup automatique
 7. **`DEPLOIEMENT_NIDOHOST.md`** - Guide complet de déploiement
@@ -27,10 +27,10 @@ Sur votre machine Windows:
 
 ```powershell
 # Aller dans le répertoire backend
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 
 # Export de la base de données
-mysqldump -u root -p goback_db > goback_db_backup.sql
+mysqldump -u root -p gaming_db > gaming_db_backup.sql
 
 # Compresser les fichiers media
 Compress-Archive -Path .\media\* -DestinationPath media.zip
@@ -46,7 +46,7 @@ git push origin master
 Connectez-vous au serveur:
 
 ```bash
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 # Password: 3$lL_L3J~UU*
 ```
 
@@ -58,11 +58,11 @@ Tests après déploiement:
 
 ```bash
 # Test API
-curl https://api.gobag.ma/api/products/
-curl https://api.gobag.ma/api/categories/
+curl https://api.goback.ma/api/products/
+curl https://api.goback.ma/api/categories/
 
 # Accéder à l'admin
-# https://api.gobag.ma/admin/
+# https://api.goback.ma/admin/
 ```
 
 ## 🔐 Variables d'Environnement (Production)
@@ -73,22 +73,22 @@ Variables importantes à configurer dans `.env` sur le serveur:
 # Sécurité
 SECRET_KEY=<générer-une-clé-unique-sécurisée>
 DEBUG=False
-ALLOWED_HOSTS=176.9.31.158,gobag.ma,www.gobag.ma,api.gobag.ma
+ALLOWED_HOSTS=178.63.126.247,goback.ma,www.goback.ma,api.goback.ma
 
 # Base de données
-DB_NAME=gobagma_goback_db
-DB_USER=gobagma_goback_user
+DB_NAME=gobackma_gaming_db
+DB_USER=gobackma_gaming_user
 DB_PASSWORD=<mot-de-passe-sécurisé>
 DB_HOST=localhost
 DB_PORT=3306
 
 # CORS (Frontend)
-CORS_ALLOWED_ORIGINS=https://gobag.ma,https://www.gobag.ma
-CSRF_TRUSTED_ORIGINS=https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma
+CORS_ALLOWED_ORIGINS=https://goback.ma,https://www.goback.ma
+CSRF_TRUSTED_ORIGINS=https://goback.ma,https://www.goback.ma,https://api.goback.ma
 
 # Chemins
-STATIC_ROOT=/home/gobagma/public_html/backend/staticfiles
-MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
+STATIC_ROOT=/home/gobackma/public_html/backend/staticfiles
+MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
 ```
 
 ## 📊 Architecture de Production
@@ -110,12 +110,12 @@ MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
                  │
          ┌───────▼────────┐
          │ Django (Python)│  ← Application
-         │  Goback API    │
+         │  gaming API    │
          └───────┬────────┘
                  │
          ┌───────▼────────┐
          │  MySQL Server  │  ← Database
-         │  goback_db     │
+         │  gaming_db     │
          └────────────────┘
 ```
 
@@ -132,8 +132,8 @@ MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
 ## 📁 Structure sur le Serveur
 
 ```
-/home/gobagma/
-├── goback_backend/           # Code source
+/home/gobackma/
+├── gaming_backend/           # Code source
 │   ├── config/
 │   ├── shop/
 │   ├── orders/
@@ -173,13 +173,13 @@ MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
 
 Commandes:
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 git pull origin master
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ## 🔒 Sécurité
@@ -211,8 +211,8 @@ sudo supervisorctl status
 sudo systemctl status nginx
 
 # Logs en temps réel
-tail -f /home/gobagma/logs/gunicorn_error.log
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 
 # Utilisation système
 htop
@@ -232,7 +232,7 @@ free -h
 ### Backup manuel:
 
 ```bash
-/home/gobagma/goback_backend/backup.sh
+/home/gobackma/gaming_backend/backup.sh
 ```
 
 ## 🐛 Dépannage
@@ -240,9 +240,9 @@ free -h
 ### Problème: 502 Bad Gateway
 
 ```bash
-sudo supervisorctl status goback
-sudo supervisorctl restart goback
-tail -f /home/gobagma/logs/gunicorn_error.log
+sudo supervisorctl status gaming
+sudo supervisorctl restart gaming
+tail -f /home/gobackma/logs/gunicorn_error.log
 ```
 
 ### Problème: Static files non chargés
@@ -256,10 +256,10 @@ sudo systemctl restart nginx
 
 ```bash
 # Vérifier la connexion
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 
 # Vérifier .env
-cat /home/gobagma/goback_backend/.env
+cat /home/gobackma/gaming_backend/.env
 ```
 
 ## 📞 Support & Documentation

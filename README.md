@@ -1,12 +1,12 @@
-# 🛍️ Goback Backend - E-commerce Django API
+# 🛍️ Gaming Backend - E-commerce Django API
 
-Backend Django pour la plateforme e-commerce Goback (Sacs, Valises et Bagages).
+Backend Django pour la plateforme e-commerce Gaming (Sacs, Valises et Bagages).
 
 ## 🌐 URLs de Production
 
-- **API Backend**: https://api.gobag.ma
-- **Admin Panel**: https://api.gobag.ma/admin/
-- **Frontend**: https://gobag.ma
+- **API Backend**: https://api.goback.ma
+- **Admin Panel**: https://api.goback.ma/admin/
+- **Frontend**: https://goback.ma
 
 ## 🚀 Déploiement sur Nidohost
 
@@ -24,17 +24,17 @@ Le backend est configuré et prêt pour le déploiement sur Nidohost. Consultez:
 #### Sur Windows (Préparation):
 
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 .\prepare_upload.ps1
 ```
 
 #### Sur le Serveur Nidohost:
 
 ```bash
-ssh gobagma@176.9.31.158
-cd /home/gobagma
-git clone https://github.com/votre-repo/goback_backend.git
-cd goback_backend
+ssh gobackma@178.63.126.247
+cd /home/gobackma
+git clone https://github.com/votre-repo/gaming_backend.git
+cd gaming_backend
 ./deploy.sh
 ```
 
@@ -60,7 +60,7 @@ Internet (HTTPS) → Nginx (443) → Gunicorn (8000) → Django → MySQL
 ## 📂 Structure du Projet
 
 ```
-goback_backend/
+gaming_backend/
 ├── config/              # Configuration Django
 │   ├── settings.py     # Settings avec support .env
 │   ├── urls.py
@@ -74,8 +74,8 @@ goback_backend/
 ├── requirements.txt    # Dépendances Python
 ├── .env.production     # Template variables production
 ├── gunicorn_config.py  # Configuration Gunicorn
-├── supervisor_goback.conf  # Configuration Supervisor
-├── nginx_goback.conf   # Configuration Nginx
+├── supervisor_gaming.conf  # Configuration Supervisor
+├── nginx_gaming.conf   # Configuration Nginx
 ├── deploy.sh           # Script de déploiement
 ├── backup.sh           # Script de backup
 ├── verify_deployment.sh # Script de vérification
@@ -94,8 +94,8 @@ goback_backend/
 
 ```bash
 # Clone
-git clone https://github.com/votre-repo/goback_backend.git
-cd goback_backend
+git clone https://github.com/votre-repo/gaming_backend.git
+cd gaming_backend
 
 # Environnement virtuel
 python -m venv venv
@@ -138,7 +138,7 @@ DEBUG=True  # False en production
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Database
-DB_NAME=goback_db
+DB_NAME=gaming_db
 DB_USER=root
 DB_PASSWORD=
 DB_HOST=localhost
@@ -200,19 +200,19 @@ MEDIA_URL=/media/
 
 ```bash
 # Gunicorn
-tail -f /home/gobagma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
 
 # Nginx
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 
 # Supervisor
-tail -f /home/gobagma/logs/supervisor_goback.log
+tail -f /home/gobackma/logs/supervisor_gaming.log
 ```
 
 ### Status des Services
 
 ```bash
-sudo supervisorctl status goback
+sudo supervisorctl status gaming
 sudo systemctl status nginx
 ```
 
@@ -228,13 +228,13 @@ Script: [backup.sh](./backup.sh)
 ## 🔄 Mise à Jour du Code
 
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 git pull origin master
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ## 🧪 Tests
@@ -255,10 +255,10 @@ python manage.py test
 
 ## 📱 Frontend
 
-Le frontend Next.js est disponible dans: `../goback_frontend/`
+Le frontend Next.js est disponible dans: `../gaming_frontend/`
 
 Déploiement recommandé sur Vercel avec:
-- `NEXT_PUBLIC_API_URL=https://api.gobag.ma`
+- `NEXT_PUBLIC_API_URL=https://api.goback.ma`
 
 ## 🤝 Contribution
 
@@ -274,7 +274,7 @@ Ce projet est privé et propriétaire.
 
 ## 👥 Auteurs
 
-- **Équipe Goback** - Développement initial
+**Équipe Gaming** - Développement initial
 
 ## 🆘 Support
 

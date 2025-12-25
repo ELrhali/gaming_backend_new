@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Script de déploiement pour Goback Backend sur Nidohost
+# Script de déploiement pour gaming Backend sur Nidohost
 # Ce script doit être exécuté sur le serveur après avoir cloné le repo
 
 set -e  # Arrêter en cas d'erreur
 
 echo "=========================================="
-echo "  Déploiement Goback Backend - Nidohost  "
+echo "  Déploiement gaming Backend - Nidohost  "
 echo "=========================================="
 
 # Variables
-PROJECT_DIR="/home/gobagma/goback_backend"
-VENV_DIR="/home/gobagma/venv"
+PROJECT_DIR="/home/gobackma/gaming_backend"
+VENV_DIR="/home/gobackma/venv"
 PYTHON_VERSION="python3.11"  # Ajuster selon la version disponible sur le serveur
 
 # Couleurs pour les messages
@@ -21,9 +21,9 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${YELLOW}[1/10] Création des répertoires nécessaires...${NC}"
-mkdir -p /home/gobagma/logs
-mkdir -p /home/gobagma/run
-mkdir -p /home/gobagma/backup
+mkdir -p /home/gobackma/logs
+mkdir -p /home/gobackma/run
+mkdir -p /home/gobackma/backup
 
 echo -e "${YELLOW}[2/10] Mise à jour du système...${NC}"
 # Note: Cette commande nécessite les droits sudo
@@ -77,11 +77,11 @@ echo -e "==========================================${NC}"
 echo ""
 echo "Prochaines étapes:"
 echo "  1. Éditez le fichier .env avec vos vraies valeurs"
-echo "  2. Configurez Nginx (voir nginx_goback.conf)"
-echo "  3. Configurez Supervisor (voir supervisor_goback.conf)"
+echo "  2. Configurez Nginx (voir nginx_gaming.conf)"
+echo "  3. Configurez Supervisor (voir supervisor_gaming.conf)"
 echo "  4. Redémarrez les services:"
 echo "     sudo systemctl restart nginx"
 echo "     sudo supervisorctl reread"
 echo "     sudo supervisorctl update"
-echo "     sudo supervisorctl start goback"
+echo "     sudo supervisorctl start gaming"
 echo ""

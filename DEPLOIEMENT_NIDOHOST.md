@@ -1,19 +1,19 @@
-# Guide de Déploiement Goback Backend sur Nidohost
+# Guide de Déploiement gaming Backend sur Nidohost
 
 ## 📋 Informations du Serveur
 
-- **IP**: 176.9.31.158
-- **Username**: gobagma
+- **IP**: 178.63.126.247
+- **Username**: gobackma
 - **Password**: 3$lL_L3J~UU*
-- **Domain Backend**: api.gobag.ma (à configurer)
-- **Domain Frontend**: https://gobag.ma
+- **Domain Backend**: api.goback.ma (à configurer)
+- **Domain Frontend**: https://goback.ma
 
 ## 🚀 Étapes de Déploiement
 
 ### 1. Connexion au Serveur
 
 ```bash
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 # Entrez le mot de passe: 3$lL_L3J~UU*
 ```
 
@@ -43,9 +43,9 @@ sudo apt install -y git curl wget nano htop
 sudo mysql -u root
 
 # Dans MySQL, créer la base de données et l'utilisateur
-CREATE DATABASE gobagma_goback_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobagma_goback_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
-GRANT ALL PRIVILEGES ON gobagma_goback_db.* TO 'gobagma_goback_user'@'localhost';
+CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -53,19 +53,19 @@ EXIT;
 ### 4. Clonage du Projet depuis GitHub
 
 ```bash
-cd /home/gobagma
-git clone https://github.com/votre-username/goback_backend.git
-cd goback_backend
+cd /home/gobackma
+git clone https://github.com/votre-username/gaming_backend.git
+cd gaming_backend
 ```
 
 ### 5. Configuration de l'Environnement Python
 
 ```bash
 # Créer l'environnement virtuel
-python3.11 -m venv /home/gobagma/venv
+python3.11 -m venv /home/gobackma/venv
 
 # Activer l'environnement virtuel
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 
 # Mettre à jour pip
 pip install --upgrade pip
@@ -90,24 +90,24 @@ nano .env
 # Django
 SECRET_KEY=GENERER_UNE_CLE_SECRETE_UNIQUE_ICI
 DEBUG=False
-ALLOWED_HOSTS=176.9.31.158,gobag.ma,www.gobag.ma,api.gobag.ma
+ALLOWED_HOSTS=178.63.126.247,goback.ma,www.goback.ma,api.goback.ma
 
 # Database
-DB_NAME=gobagma_goback_db
-DB_USER=gobagma_goback_user
+DB_NAME=gobackma_gaming_db
+DB_USER=gobackma_gaming_user
 DB_PASSWORD=VotreMotDePasseSecurisé123!
 DB_HOST=localhost
 DB_PORT=3306
 
 # CORS
-CORS_ALLOWED_ORIGINS=https://gobag.ma,https://www.gobag.ma
-CSRF_TRUSTED_ORIGINS=https://gobag.ma,https://www.gobag.ma,https://api.gobag.ma
+CORS_ALLOWED_ORIGINS=https://goback.ma,https://www.goback.ma
+CSRF_TRUSTED_ORIGINS=https://goback.ma,https://www.goback.ma,https://api.goback.ma
 
 # Static & Media
 STATIC_URL=/static/
-STATIC_ROOT=/home/gobagma/public_html/backend/staticfiles
+STATIC_ROOT=/home/gobackma/public_html/backend/staticfiles
 MEDIA_URL=/media/
-MEDIA_ROOT=/home/gobagma/public_html/goback_backend/media
+MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
 ```
 
 **Pour générer une SECRET_KEY sécurisée**:
@@ -124,25 +124,25 @@ python3 -c "from django.core.management.utils import get_random_secret_key; prin
 
 ```powershell
 # Dans le terminal PowerShell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 
 # Export de la base de données locale
 # Assurez-vous que MySQL est installé localement
-mysqldump -u root -p goback_db > goback_db_backup.sql
+mysqldump -u root -p gaming_db > gaming_db_backup.sql
 
 # Transférer le fichier vers le serveur (utiliser WinSCP, FileZilla ou scp)
 # Via PowerShell avec scp (si disponible):
-scp goback_db_backup.sql gobagma@176.9.31.158:/home/gobagma/
+scp gaming_db_backup.sql gobackma@178.63.126.247:/home/gobackma/
 ```
 
 **Sur le serveur**:
 
 ```bash
 # Importer la base de données
-mysql -u gobagma_goback_user -p gobagma_goback_db < /home/gobagma/goback_db_backup.sql
+mysql -u gobackma_gaming_user -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
 
 # Nettoyer le fichier de backup
-rm /home/gobagma/goback_db_backup.sql
+rm /home/gobackma/gaming_db_backup.sql
 ```
 
 #### Option B: Utiliser Django dumpdata/loaddata
@@ -150,7 +150,7 @@ rm /home/gobagma/goback_db_backup.sql
 **Sur votre machine locale**:
 
 ```powershell
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 2 > datadump.json
 ```
 
@@ -169,35 +169,35 @@ python manage.py loaddata datadump.json
 Compress-Archive -Path .\media\* -DestinationPath media.zip
 
 # Transférer vers le serveur (utiliser WinSCP, FileZilla ou scp)
-scp media.zip gobagma@176.9.31.158:/home/gobagma/
+scp media.zip gobackma@178.63.126.247:/home/gobackma/
 ```
 
 **Sur le serveur**:
 
 ```bash
 # Créer le répertoire media
-mkdir -p /home/gobagma/public_html/backend/media
+mkdir -p /home/gobackma/public_html/backend/media
 
 # Décompresser
-unzip /home/gobagma/media.zip -d /home/gobagma/public_html/backend/media/
+unzip /home/gobackma/media.zip -d /home/gobackma/public_html/backend/media/
 
 # Nettoyer
-rm /home/gobagma/media.zip
+rm /home/gobackma/media.zip
 
 # Définir les permissions
-chmod -R 755 /home/gobagma/public_html/backend/media
+chmod -R 755 /home/gobackma/public_html/backend/media
 ```
 
 ### 9. Django - Migrations et Collecte des Fichiers Statiques
 
 ```bash
-cd /home/gobagma/goback_backend
-source /home/gobagma/venv/bin/activate
+cd /home/gobackma/gaming_backend
+source /home/gobackma/venv/bin/activate
 
 # Créer les répertoires nécessaires
-mkdir -p /home/gobagma/logs
-mkdir -p /home/gobagma/run
-mkdir -p /home/gobagma/public_html/backend
+mkdir -p /home/gobackma/logs
+mkdir -p /home/gobackma/run
+mkdir -p /home/gobackma/public_html/backend
 
 # Appliquer les migrations
 python manage.py migrate
@@ -213,27 +213,27 @@ python manage.py createsuperuser
 
 ```bash
 # Copier la configuration Supervisor
-sudo cp supervisor_goback.conf /etc/supervisor/conf.d/goback.conf
+sudo cp supervisor_gaming.conf /etc/supervisor/conf.d/gaming.conf
 
 # Recharger Supervisor
 sudo supervisorctl reread
 sudo supervisorctl update
 
 # Démarrer l'application
-sudo supervisorctl start goback
+sudo supervisorctl start gaming
 
 # Vérifier le statut
-sudo supervisorctl status goback
+sudo supervisorctl status gaming
 ```
 
 ### 11. Configuration de Nginx
 
 ```bash
 # Copier la configuration Nginx
-sudo cp nginx_goback.conf /etc/nginx/sites-available/goback
+sudo cp nginx_gaming.conf /etc/nginx/sites-available/gaming
 
 # Créer le lien symbolique
-sudo ln -s /etc/nginx/sites-available/goback /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/gaming /etc/nginx/sites-enabled/
 
 # Tester la configuration
 sudo nginx -t
@@ -248,8 +248,8 @@ sudo systemctl restart nginx
 # Installer Certbot
 sudo apt install -y certbot python3-certbot-nginx
 
-# Obtenir et installer le certificat SSL pour api.gobag.ma
-sudo certbot --nginx -d api.gobag.ma
+# Obtenir et installer le certificat SSL pour api.goback.ma
+sudo certbot --nginx -d api.goback.ma
 
 # Le renouvellement automatique est configuré par défaut
 # Vérifier avec:
@@ -258,12 +258,12 @@ sudo certbot renew --dry-run
 
 ### 13. Configuration DNS
 
-Chez votre registrar de domaine (où gobag.ma est enregistré), configurez:
+Chez votre registrar de domaine (où goback.ma est enregistré), configurez:
 
 **Pour le backend (API)**:
 - Type: A
 - Nom: api
-- Valeur: 176.9.31.158
+- Valeur: 178.63.126.247
 - TTL: 3600
 
 **Pour le frontend**:
@@ -275,7 +275,7 @@ Chez votre registrar de domaine (où gobag.ma est enregistré), configurez:
 **Pour le www**:
 - Type: CNAME
 - Nom: www
-- Valeur: gobag.ma
+- Valeur: goback.ma
 - TTL: 3600
 
 ### 14. Tests de Vérification
@@ -285,30 +285,30 @@ Chez votre registrar de domaine (où gobag.ma est enregistré), configurez:
 curl http://127.0.0.1:8000
 
 # Vérifier Nginx
-curl http://176.9.31.158
+curl http://178.63.126.247
 
 # Vérifier HTTPS (après configuration SSL)
-curl https://api.gobag.ma
+curl https://api.goback.ma
 
 # Tester l'API
-curl https://api.gobag.ma/api/products/
-curl https://api.gobag.ma/api/categories/
+curl https://api.goback.ma/api/products/
+curl https://api.goback.ma/api/categories/
 ```
 
 ### 15. Commandes de Gestion Utiles
 
 ```bash
 # Voir les logs Gunicorn
-tail -f /home/gobagma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
 
 # Voir les logs Nginx
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 
 # Voir les logs Supervisor
-tail -f /home/gobagma/logs/supervisor_goback.log
+tail -f /home/gobackma/logs/supervisor_gaming.log
 
 # Redémarrer l'application
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 
 # Redémarrer Nginx
 sudo systemctl restart nginx
@@ -318,7 +318,7 @@ sudo supervisorctl status
 sudo systemctl status nginx
 
 # Se connecter à la base de données
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 ```
 
 ## 🔄 Mises à Jour du Code
@@ -326,10 +326,10 @@ mysql -u gobagma_goback_user -p gobagma_goback_db
 Pour mettre à jour le code après des modifications:
 
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 git pull origin master
 
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 
 # Installer les nouvelles dépendances si nécessaire
 pip install -r requirements.txt
@@ -341,7 +341,7 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 
 # Redémarrer l'application
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ## 🔐 Sécurité
@@ -368,13 +368,13 @@ sudo mysql_secure_installation
 
 ```bash
 # Propriétaire correct
-sudo chown -R gobagma:gobagma /home/gobagma/goback_backend
-sudo chown -R gobagma:gobagma /home/gobagma/public_html
+sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
+sudo chown -R gobackma:gobackma /home/gobackma/public_html
 
 # Permissions appropriées
-chmod -R 755 /home/gobagma/goback_backend
-chmod -R 755 /home/gobagma/public_html/backend/staticfiles
-chmod -R 755 /home/gobagma/public_html/backend/media
+chmod -R 755 /home/gobackma/gaming_backend
+chmod -R 755 /home/gobackma/public_html/backend/staticfiles
+chmod -R 755 /home/gobackma/public_html/backend/media
 ```
 
 ## 📊 Monitoring
@@ -382,7 +382,7 @@ chmod -R 755 /home/gobagma/public_html/backend/media
 ### Créer un script de monitoring (optionnel)
 
 ```bash
-nano /home/gobagma/monitor.sh
+nano /home/gobackma/monitor.sh
 ```
 
 ```bash
@@ -408,7 +408,7 @@ ps aux | grep gunicorn
 ```
 
 ```bash
-chmod +x /home/gobagma/monitor.sh
+chmod +x /home/gobackma/monitor.sh
 ```
 
 ## 🐛 Dépannage
@@ -417,11 +417,11 @@ chmod +x /home/gobagma/monitor.sh
 
 ```bash
 # Vérifier les logs
-tail -100 /home/gobagma/logs/gunicorn_error.log
-tail -100 /home/gobagma/logs/supervisor_goback.log
+tail -100 /home/gobackma/logs/gunicorn_error.log
+tail -100 /home/gobackma/logs/supervisor_gaming.log
 
 # Vérifier la configuration Supervisor
-sudo supervisorctl tail goback stderr
+sudo supervisorctl tail gaming stderr
 ```
 
 ### Erreur 502 Bad Gateway
@@ -431,21 +431,21 @@ sudo supervisorctl tail goback stderr
 netstat -tlnp | grep 8000
 
 # Redémarrer l'application
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ### Problèmes de base de données
 
 ```bash
 # Se connecter à MySQL
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 
 # Vérifier les tables
 SHOW TABLES;
 
 # Vérifier les migrations Django
-cd /home/gobagma/goback_backend
-source /home/gobagma/venv/bin/activate
+cd /home/gobackma/gaming_backend
+source /home/gobackma/venv/bin/activate
 python manage.py showmigrations
 ```
 
@@ -453,12 +453,12 @@ python manage.py showmigrations
 
 Une fois le backend déployé, vous pourrez configurer le frontend sur Vercel avec:
 
-- **Repository**: goback_frontend
+- **Repository**: gaming_frontend
 - **Framework**: Next.js
 - **Build Command**: `npm run build`
 - **Output Directory**: `.next`
 - **Environment Variable**: 
-  - `NEXT_PUBLIC_API_URL=https://api.gobag.ma`
+  - `NEXT_PUBLIC_API_URL=https://api.goback.ma`
 
 ## ✅ Checklist de Déploiement
 
@@ -482,10 +482,10 @@ Une fois le backend déployé, vous pourrez configurer le frontend sur Vercel av
 ## 🆘 Support
 
 En cas de problème:
-1. Vérifiez les logs (`/home/gobagma/logs/`)
+1. Vérifiez les logs (`/home/gobackma/logs/`)
 2. Consultez la documentation Django
 3. Vérifiez la configuration Nginx et Supervisor
 
 ## 🎉 Félicitations !
 
-Votre backend Django est maintenant déployé sur Nidohost et accessible via https://api.gobag.ma
+Votre backend Django est maintenant déployé sur Nidohost et accessible via https://api.goback.ma

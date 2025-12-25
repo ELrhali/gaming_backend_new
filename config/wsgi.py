@@ -1,5 +1,5 @@
 """
-WSGI config for Goback project.
+WSGI config for gaming project.
 """
 
 import os

@@ -4,14 +4,14 @@
 
 ```bash
 # SSH
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 # Password: 3$lL_L3J~UU*
 
 # Aller dans le projet
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 
 # Activer l'environnement virtuel
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 ```
 
 ## 🔄 Gestion des Services
@@ -20,23 +20,23 @@ source /home/gobagma/venv/bin/activate
 
 ```bash
 # Status
-sudo supervisorctl status goback
+sudo supervisorctl status gaming
 
 # Démarrer
-sudo supervisorctl start goback
+sudo supervisorctl start gaming
 
 # Arrêter
-sudo supervisorctl stop goback
+sudo supervisorctl stop gaming
 
 # Redémarrer
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 
 # Recharger la configuration
 sudo supervisorctl reread
 sudo supervisorctl update
 
 # Voir les logs en temps réel
-sudo supervisorctl tail -f goback stderr
+sudo supervisorctl tail -f gaming stderr
 ```
 
 ### Nginx
@@ -80,7 +80,7 @@ sudo systemctl stop mysql
 sudo systemctl restart mysql
 
 # Se connecter
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 ```
 
 ## 📊 Logs
@@ -89,46 +89,46 @@ mysql -u gobagma_goback_user -p gobagma_goback_db
 
 ```bash
 # Gunicorn - erreurs
-tail -f /home/gobagma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
 
 # Gunicorn - accès
-tail -f /home/gobagma/logs/gunicorn_access.log
+tail -f /home/gobackma/logs/gunicorn_access.log
 
 # Nginx - erreurs
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 
 # Nginx - accès
-tail -f /home/gobagma/logs/nginx_access.log
+tail -f /home/gobackma/logs/nginx_access.log
 
 # Supervisor
-tail -f /home/gobagma/logs/supervisor_goback.log
+tail -f /home/gobackma/logs/supervisor_gaming.log
 
 # Toutes les erreurs récentes
-tail -100 /home/gobagma/logs/gunicorn_error.log
-tail -100 /home/gobagma/logs/nginx_error.log
+tail -100 /home/gobackma/logs/gunicorn_error.log
+tail -100 /home/gobackma/logs/nginx_error.log
 
 # Suivre plusieurs logs simultanément
-tail -f /home/gobagma/logs/*.log
+tail -f /home/gobackma/logs/*.log
 ```
 
 ### Analyser les logs
 
 ```bash
 # Nombre de requêtes par IP
-awk '{print $1}' /home/gobagma/logs/nginx_access.log | sort | uniq -c | sort -rn | head -20
+awk '{print $1}' /home/gobackma/logs/nginx_access.log | sort | uniq -c | sort -rn | head -20
 
 # Erreurs 500
-grep "500" /home/gobagma/logs/nginx_access.log
+grep "500" /home/gobackma/logs/nginx_access.log
 
 # Erreurs récentes
-grep "ERROR" /home/gobagma/logs/gunicorn_error.log | tail -20
+grep "ERROR" /home/gobackma/logs/gunicorn_error.log | tail -20
 ```
 
 ## 🐍 Django Management
 
 ```bash
-cd /home/gobagma/goback_backend
-source /home/gobagma/venv/bin/activate
+cd /home/gobackma/gaming_backend
+source /home/gobackma/venv/bin/activate
 
 # Vérifier la configuration
 python manage.py check
@@ -169,7 +169,7 @@ python manage.py dumpdata shop.Product --indent 2 > products.json
 
 ```bash
 # Se connecter
-mysql -u gobagma_goback_user -p gobagma_goback_db
+mysql -u gobackma_gaming_user -p gobackma_gaming_db
 
 # Se connecter en root
 sudo mysql -u root
@@ -198,7 +198,7 @@ SELECT
     table_schema AS 'Database',
     ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
 FROM information_schema.tables
-WHERE table_schema = 'gobagma_goback_db';
+WHERE table_schema = 'gobackma_gaming_db';
 
 -- Optimiser les tables
 OPTIMIZE TABLE shop_product;
@@ -211,19 +211,19 @@ EXIT;
 
 ```bash
 # Backup
-mysqldump -u gobagma_goback_user -p gobagma_goback_db > backup_$(date +%Y%m%d_%H%M%S).sql
+mysqldump -u gobackma_gaming_user -p gobackma_gaming_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Backup compressé
-mysqldump -u gobagma_goback_user -p gobagma_goback_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+mysqldump -u gobackma_gaming_user -p gobackma_gaming_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Restore
-mysql -u gobagma_goback_user -p gobagma_goback_db < backup.sql
+mysql -u gobackma_gaming_user -p gobackma_gaming_db < backup.sql
 
 # Restore compressé
-gunzip < backup.sql.gz | mysql -u gobagma_goback_user -p gobagma_goback_db
+gunzip < backup.sql.gz | mysql -u gobackma_gaming_user -p gobackma_gaming_db
 
 # Script automatique
-/home/gobagma/goback_backend/backup.sh
+/home/gobackma/gaming_backend/backup.sh
 ```
 
 ## 📁 Fichiers et Répertoires
@@ -232,39 +232,39 @@ gunzip < backup.sql.gz | mysql -u gobagma_goback_user -p gobagma_goback_db
 
 ```bash
 # Répertoire projet
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 
 # Logs
-cd /home/gobagma/logs
+cd /home/gobackma/logs
 
 # Static files
-cd /home/gobagma/public_html/backend/staticfiles
+cd /home/gobackma/public_html/backend/staticfiles
 
 # Media files
-cd /home/gobagma/public_html/backend/media
+cd /home/gobackma/public_html/backend/media
 
 # Backups
-cd /home/gobagma/backup
+cd /home/gobackma/backup
 ```
 
 ### Permissions
 
 ```bash
 # Voir les permissions
-ls -la /home/gobagma/goback_backend
+ls -la /home/gobackma/gaming_backend
 
 # Changer le propriétaire
-sudo chown -R gobagma:gobagma /home/gobagma/goback_backend
+sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
 
 # Changer les permissions
-chmod -R 755 /home/gobagma/goback_backend
-chmod -R 755 /home/gobagma/public_html/backend
+chmod -R 755 /home/gobackma/gaming_backend
+chmod -R 755 /home/gobackma/public_html/backend
 
 # Permissions media (lecture/écriture)
-chmod -R 755 /home/gobagma/public_html/backend/media
+chmod -R 755 /home/gobackma/public_html/backend/media
 
 # Permissions logs (écriture)
-chmod -R 755 /home/gobagma/logs
+chmod -R 755 /home/gobackma/logs
 ```
 
 ### Espace disque
@@ -274,19 +274,19 @@ chmod -R 755 /home/gobagma/logs
 df -h
 
 # Taille des répertoires
-du -sh /home/gobagma/*
+du -sh /home/gobackma/*
 
 # Taille du projet
-du -sh /home/gobagma/goback_backend
+du -sh /home/gobackma/gaming_backend
 
 # Taille des media
-du -sh /home/gobagma/public_html/backend/media
+du -sh /home/gobackma/public_html/backend/media
 
 # Plus gros fichiers
-find /home/gobagma -type f -size +10M -exec ls -lh {} \; | sort -k 5 -h
+find /home/gobackma -type f -size +10M -exec ls -lh {} \; | sort -k 5 -h
 
 # Nettoyer les logs anciens
-find /home/gobagma/logs -name "*.log" -mtime +30 -delete
+find /home/gobackma/logs -name "*.log" -mtime +30 -delete
 ```
 
 ## 🔄 Mise à Jour du Code
@@ -294,7 +294,7 @@ find /home/gobagma/logs -name "*.log" -mtime +30 -delete
 ### Depuis GitHub
 
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 
 # Vérifier le statut Git
 git status
@@ -310,11 +310,11 @@ git fetch origin
 git reset --hard origin/master
 
 # Après le pull
-source /home/gobagma/venv/bin/activate
+source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ### Mise à jour manuelle
@@ -324,10 +324,10 @@ sudo supervisorctl restart goback
 # Utiliser WinSCP ou scp
 
 # Depuis Windows (PowerShell)
-scp C:\path\to\file.py gobagma@176.9.31.158:/home/gobagma/goback_backend/
+scp C:\path\to\file.py gobackma@178.63.126.247:/home/gobackma/gaming_backend/
 
 # Redémarrer après modification
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 ```
 
 ## 🔍 Monitoring
@@ -374,7 +374,7 @@ netstat -an | grep ESTABLISHED
 
 # Test de connexion
 curl http://127.0.0.1:8000
-curl https://api.gobag.ma
+curl https://api.goback.ma
 ```
 
 ### Système
@@ -469,29 +469,29 @@ sudo apt autoremove
 sudo apt autoclean
 
 # Nettoyer les logs anciens
-find /home/gobagma/logs -name "*.log" -mtime +30 -delete
+find /home/gobackma/logs -name "*.log" -mtime +30 -delete
 
 # Nettoyer les backups anciens
-find /home/gobagma/backup -name "*.sql.gz" -mtime +7 -delete
+find /home/gobackma/backup -name "*.sql.gz" -mtime +7 -delete
 
 # Nettoyer le cache Python
-find /home/gobagma/goback_backend -type d -name "__pycache__" -exec rm -r {} +
+find /home/gobackma/gaming_backend -type d -name "__pycache__" -exec rm -r {} +
 
 # Optimiser MySQL
-mysql -u gobagma_goback_user -p -e "OPTIMIZE TABLE gobagma_goback_db.shop_product;"
+mysql -u gobackma_gaming_user -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_product;"
 ```
 
 ### Backup rapide
 
 ```bash
 # Backup complet
-/home/gobagma/goback_backend/backup.sh
+/home/gobackma/gaming_backend/backup.sh
 
 # Backup manuel DB
-mysqldump -u gobagma_goback_user -p gobagma_goback_db | gzip > /home/gobagma/backup/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
+mysqldump -u gobackma_gaming_user -p gobackma_gaming_db | gzip > /home/gobackma/backup/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Backup manuel media
-tar -czf /home/gobagma/backup/media_backup_$(date +%Y%m%d_%H%M%S).tar.gz /home/gobagma/public_html/backend/media/
+tar -czf /home/gobackma/backup/media_backup_$(date +%Y%m%d_%H%M%S).tar.gz /home/gobackma/public_html/backend/media/
 ```
 
 ## 🧪 Tests
@@ -515,10 +515,10 @@ curl http://127.0.0.1:8000/api/categories/
 curl -I http://127.0.0.1:8000/admin/
 
 # Test HTTPS externe
-curl https://api.gobag.ma/api/products/
+curl https://api.goback.ma/api/products/
 
 # Test avec headers
-curl -H "Content-Type: application/json" https://api.gobag.ma/api/products/
+curl -H "Content-Type: application/json" https://api.goback.ma/api/products/
 ```
 
 ### Test de performance
@@ -538,11 +538,11 @@ ab -n 100 -c 10 -H "Authorization: Token YOUR_TOKEN" http://127.0.0.1:8000/api/p
 
 ```bash
 # Tout redémarrer dans l'ordre
-sudo supervisorctl stop goback
+sudo supervisorctl stop gaming
 sudo systemctl restart nginx
 sudo systemctl restart mysql
 sleep 2
-sudo supervisorctl start goback
+sudo supervisorctl start gaming
 
 # Vérifier
 sudo supervisorctl status
@@ -554,7 +554,7 @@ curl http://127.0.0.1:8000/api/products/
 
 ```bash
 # Script de vérification
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 
@@ -570,8 +570,8 @@ echo -e "\n=== Processus ==="
 ps aux | grep -E "(gunicorn|nginx)" | grep -v grep
 
 echo -e "\n=== Logs récents ==="
-tail -5 /home/gobagma/logs/gunicorn_error.log
-tail -5 /home/gobagma/logs/nginx_error.log
+tail -5 /home/gobackma/logs/gunicorn_error.log
+tail -5 /home/gobackma/logs/nginx_error.log
 
 echo -e "\n=== API Test ==="
 curl -s http://127.0.0.1:8000/api/products/ | head -c 100
@@ -592,13 +592,13 @@ free -h
 nano ~/.bashrc
 
 # Ajouter ces alias
-alias goback='cd /home/gobagma/goback_backend && source /home/gobagma/venv/bin/activate'
-alias logs='tail -f /home/gobagma/logs/gunicorn_error.log'
-alias restart='sudo supervisorctl restart goback'
+alias gaming='cd /home/gobackma/gaming_backend && source /home/gobackma/venv/bin/activate'
+alias logs='tail -f /home/gobackma/logs/gunicorn_error.log'
+alias restart='sudo supervisorctl restart gaming'
 alias status='sudo supervisorctl status && sudo systemctl status nginx --no-pager'
 
 # Recharger
 source ~/.bashrc
 ```
 
-Ensuite vous pouvez utiliser: `goback`, `logs`, `restart`, `status` directement!
+Ensuite vous pouvez utiliser: `gaming`, `logs`, `restart`, `status` directement!

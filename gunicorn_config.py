@@ -1,5 +1,5 @@
 """
-Configuration Gunicorn pour Goback Backend
+Configuration Gunicorn pour gaming Backend
 """
 import multiprocessing
 
@@ -14,17 +14,17 @@ timeout = 120
 keepalive = 5
 
 # Logging
-accesslog = "/home/gobagma/logs/gunicorn_access.log"
-errorlog = "/home/gobagma/logs/gunicorn_error.log"
+accesslog = "/home/gobackma/logs/gunicorn_access.log"
+errorlog = "/home/gobackma/logs/gunicorn_error.log"
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Process naming
-proc_name = "goback_backend"
+proc_name = "gaming_backend"
 
 # Server mechanics
 daemon = False
-pidfile = "/home/gobagma/run/gunicorn.pid"
+pidfile = "/home/gobackma/run/gunicorn.pid"
 umask = 0
 user = None
 group = None

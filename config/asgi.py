@@ -1,5 +1,5 @@
 """
-ASGI config for Goback project.
+ASGI config for gaming project.
 """
 
 import os

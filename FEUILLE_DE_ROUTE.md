@@ -1,4 +1,4 @@
-# 📋 FEUILLE DE ROUTE - DÉPLOIEMENT GOBACK
+# 📋 FEUILLE DE ROUTE - DÉPLOIEMENT gaming
 
 ## ✅ BACKEND - PRÉPARATION COMPLÈTE
 
@@ -8,8 +8,8 @@
 |---------|-------------|--------|
 | `.env.production` | Template variables d'environnement | ✅ Créé |
 | `gunicorn_config.py` | Configuration Gunicorn (WSGI) | ✅ Créé |
-| `supervisor_goback.conf` | Configuration Supervisor | ✅ Créé |
-| `nginx_goback.conf` | Configuration Nginx | ✅ Créé |
+| `supervisor_gaming.conf` | Configuration Supervisor | ✅ Créé |
+| `nginx_gaming.conf` | Configuration Nginx | ✅ Créé |
 | `deploy.sh` | Script de déploiement | ✅ Créé |
 | `backup.sh` | Script de backup automatique | ✅ Créé |
 | `verify_deployment.sh` | Script de vérification | ✅ Créé |
@@ -27,13 +27,13 @@
 
 ```powershell
 # Dans PowerShell, exécuter:
-cd C:\Users\MSI\Desktop\goback\goback_backend
+cd C:\Users\MSI\Desktop\gaming\gaming_backend
 
 # Option A: Script automatique (Recommandé)
 .\prepare_upload.ps1
 
 # Option B: Manuel
-mysqldump -u root -p goback_db > goback_db_backup.sql
+mysqldump -u root -p gaming_db > gaming_db_backup.sql
 Compress-Archive -Path .\media\* -DestinationPath media.zip
 
 # Commit et push vers GitHub
@@ -51,7 +51,7 @@ git push origin master
 #### 2.1 Connexion au serveur
 
 ```bash
-ssh gobagma@176.9.31.158
+ssh gobackma@178.63.126.247
 # Password: 3$lL_L3J~UU*
 ```
 
@@ -70,9 +70,9 @@ sudo apt install -y nginx supervisor git
 sudo mysql -u root
 
 # Dans MySQL:
-CREATE DATABASE gobagma_goback_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobagma_goback_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
-GRANT ALL PRIVILEGES ON gobagma_goback_db.* TO 'gobagma_goback_user'@'localhost';
+CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -80,13 +80,13 @@ EXIT;
 #### 2.4 Clone et configuration du projet
 
 ```bash
-cd /home/gobagma
-git clone https://github.com/votre-username/goback_backend.git
-cd goback_backend
+cd /home/gobackma
+git clone https://github.com/votre-username/gaming_backend.git
+cd gaming_backend
 
 # Environnement Python
-python3.11 -m venv /home/gobagma/venv
-source /home/gobagma/venv/bin/activate
+python3.11 -m venv /home/gobackma/venv
+source /home/gobackma/venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
@@ -107,30 +107,30 @@ Utiliser **WinSCP** (recommandé):
 1. Télécharger: https://winscp.net/
 2. Connexion:
    - Protocole: SFTP
-   - Hôte: 176.9.31.158
+   - Hôte: 178.63.126.247
    - Port: 22
-   - Username: gobagma
+   - Username: gobackma
    - Password: 3$lL_L3J~UU*
 
 3. Transférer:
-   - `goback_db_backup.sql` → `/home/gobagma/`
-   - `media.zip` → `/home/gobagma/`
+   - `gaming_db_backup.sql` → `/home/gobackma/`
+   - `media.zip` → `/home/gobackma/`
 
 #### 3.2 Import de la base de données
 
 ```bash
-cd /home/gobagma
-mysql -u gobagma_goback_user -p gobagma_goback_db < goback_db_backup.sql
-rm goback_db_backup.sql
+cd /home/gobackma
+mysql -u gobackma_gaming_user -p gobackma_gaming_db < gaming_db_backup.sql
+rm gaming_db_backup.sql
 ```
 
 #### 3.3 Extraction des fichiers media
 
 ```bash
-mkdir -p /home/gobagma/public_html/backend/media
-unzip /home/gobagma/media.zip -d /home/gobagma/public_html/backend/media/
-rm /home/gobagma/media.zip
-chmod -R 755 /home/gobagma/public_html/backend/media
+mkdir -p /home/gobackma/public_html/backend/media
+unzip /home/gobackma/media.zip -d /home/gobackma/public_html/backend/media/
+rm /home/gobackma/media.zip
+chmod -R 755 /home/gobackma/public_html/backend/media
 ```
 
 **Résultat**: Base de données et media transférés
@@ -140,11 +140,11 @@ chmod -R 755 /home/gobagma/public_html/backend/media
 ### Phase 4: Configuration Django ⏰ 10 min
 
 ```bash
-cd /home/gobagma/goback_backend
-source /home/gobagma/venv/bin/activate
+cd /home/gobackma/gaming_backend
+source /home/gobackma/venv/bin/activate
 
 # Créer répertoires
-mkdir -p /home/gobagma/logs /home/gobagma/run /home/gobagma/public_html/backend
+mkdir -p /home/gobackma/logs /home/gobackma/run /home/gobackma/public_html/backend
 
 # Migrations
 python manage.py migrate
@@ -165,18 +165,18 @@ python manage.py createsuperuser
 #### 5.1 Supervisor (Gunicorn)
 
 ```bash
-sudo cp supervisor_goback.conf /etc/supervisor/conf.d/goback.conf
+sudo cp supervisor_gaming.conf /etc/supervisor/conf.d/gaming.conf
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start goback
-sudo supervisorctl status goback
+sudo supervisorctl start gaming
+sudo supervisorctl status gaming
 ```
 
 #### 5.2 Nginx
 
 ```bash
-sudo cp nginx_goback.conf /etc/nginx/sites-available/goback
-sudo ln -s /etc/nginx/sites-available/goback /etc/nginx/sites-enabled/
+sudo cp nginx_gaming.conf /etc/nginx/sites-available/gaming
+sudo ln -s /etc/nginx/sites-available/gaming /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -189,7 +189,7 @@ sudo systemctl restart nginx
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d api.gobag.ma
+sudo certbot --nginx -d api.goback.ma
 ```
 
 **Résultat**: Backend accessible via HTTPS
@@ -215,7 +215,7 @@ sudo mysql_secure_installation
 ### Phase 8: Vérification ⏰ 5 min
 
 ```bash
-cd /home/gobagma/goback_backend
+cd /home/gobackma/gaming_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 ```
@@ -227,10 +227,10 @@ chmod +x verify_deployment.sh
 curl http://127.0.0.1:8000/api/products/
 
 # Test HTTPS
-curl https://api.gobag.ma/api/products/
+curl https://api.goback.ma/api/products/
 
 # Accès admin
-# Browser: https://api.gobag.ma/admin/
+# Browser: https://api.goback.ma/admin/
 ```
 
 **Résultat**: Backend 100% fonctionnel ✅
@@ -239,13 +239,13 @@ curl https://api.gobag.ma/api/products/
 
 ## 🌐 DNS - CONFIGURATION REQUISE
 
-### Chez votre registrar de domaine (gobag.ma):
+### Chez votre registrar de domaine (goback.ma):
 
 | Type | Nom | Valeur | TTL |
 |------|-----|--------|-----|
-| A | api | 176.9.31.158 | 3600 |
+| A | api | 178.63.126.247 | 3600 |
 | A | @ | (Vercel IP) | 3600 |
-| CNAME | www | gobag.ma | 3600 |
+| CNAME | www | goback.ma | 3600 |
 
 **Propagation DNS**: 15 min à 48h (généralement < 2h)
 
@@ -256,19 +256,19 @@ curl https://api.gobag.ma/api/products/
 ### Configuration Frontend:
 
 1. **Aller sur**: https://vercel.com
-2. **Importer**: Repository `goback_frontend`
+2. **Importer**: Repository `gaming_frontend`
 3. **Framework**: Next.js
 4. **Build Command**: `npm run build`
 5. **Output Directory**: `.next`
 
 6. **Environment Variables**:
 ```
-NEXT_PUBLIC_API_URL=https://api.gobag.ma
+NEXT_PUBLIC_API_URL=https://api.goback.ma
 ```
 
 7. **Custom Domain**:
-   - Ajouter: `gobag.ma`
-   - Ajouter: `www.gobag.ma`
+   - Ajouter: `goback.ma`
+   - Ajouter: `www.goback.ma`
 
 8. **DNS Configuration**:
    - Suivre les instructions Vercel
@@ -323,8 +323,8 @@ NEXT_PUBLIC_API_URL=https://api.gobag.ma
 - [ ] 19. Repository importé sur Vercel
 - [ ] 20. Variables d'environnement configurées
 - [ ] 21. Build réussi
-- [ ] 22. Domain gobag.ma ajouté
-- [ ] 23. Domain www.gobag.ma ajouté
+- [ ] 22. Domain goback.ma ajouté
+- [ ] 23. Domain www.goback.ma ajouté
 - [ ] 24. DNS configuré
 
 ### Post-Déploiement
@@ -353,13 +353,13 @@ NEXT_PUBLIC_API_URL=https://api.gobag.ma
 
 ```bash
 # Gunicorn
-tail -f /home/gobagma/logs/gunicorn_error.log
+tail -f /home/gobackma/logs/gunicorn_error.log
 
 # Nginx
-tail -f /home/gobagma/logs/nginx_error.log
+tail -f /home/gobackma/logs/nginx_error.log
 
 # Supervisor
-tail -f /home/gobagma/logs/supervisor_goback.log
+tail -f /home/gobackma/logs/supervisor_gaming.log
 ```
 
 ### Commandes de diagnostic:
@@ -374,7 +374,7 @@ python manage.py check
 ### Redémarrage:
 
 ```bash
-sudo supervisorctl restart goback
+sudo supervisorctl restart gaming
 sudo systemctl restart nginx
 ```
 
@@ -384,9 +384,9 @@ sudo systemctl restart nginx
 
 Une fois tout terminé:
 
-✅ Backend: https://api.gobag.ma/admin/
-✅ Frontend: https://gobag.ma
-✅ API: https://api.gobag.ma/api/products/
+✅ Backend: https://api.goback.ma/admin/
+✅ Frontend: https://goback.ma
+✅ API: https://api.goback.ma/api/products/
 
 **Félicitations! Votre e-commerce est en ligne!** 🚀
 

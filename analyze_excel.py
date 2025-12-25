@@ -2,7 +2,7 @@ import pandas as pd
 from collections import defaultdict
 
 # Charger le fichier Excel
-EXCEL_FILE = r'C:\Users\MSI\Desktop\goback\old_data.xlsx'
+EXCEL_FILE = r'C:\Users\MSI\Desktop\gaming\old_data.xlsx'
 df = pd.read_excel(EXCEL_FILE)
 
 print("\n" + "=" * 80)

@@ -1,5 +1,5 @@
 """
-URL configuration for Goback project.
+URL configuration for gaming project.
 """
 from django.contrib import admin
 from django.urls import path, include
