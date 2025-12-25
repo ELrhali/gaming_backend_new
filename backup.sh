@@ -7,7 +7,7 @@
 BACKUP_DIR="/home/gobackma/backup"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 DB_NAME="gobackma_gaming_db"
-DB_USER="gobackma_gaming_user"
+DB_USER="gobackma_gaming_root"
 DB_PASSWORD="VotreMotDePasseSecurisé123!"
 
 # Créer le répertoire de backup s'il n'existe pas

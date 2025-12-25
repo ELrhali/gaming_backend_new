@@ -77,7 +77,7 @@ ALLOWED_HOSTS=178.63.126.247,goback.ma,www.goback.ma,api.goback.ma
 
 # Base de données
 DB_NAME=gobackma_gaming_db
-DB_USER=gobackma_gaming_user
+DB_USER=gobackma_gaming_root
 DB_PASSWORD=<mot-de-passe-sécurisé>
 DB_HOST=localhost
 DB_PORT=3306
@@ -256,7 +256,7 @@ sudo systemctl restart nginx
 
 ```bash
 # Vérifier la connexion
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Vérifier .env
 cat /home/gobackma/gaming_backend/.env

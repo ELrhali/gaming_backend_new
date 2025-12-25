@@ -80,7 +80,7 @@ sudo systemctl stop mysql
 sudo systemctl restart mysql
 
 # Se connecter
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 ```
 
 ## 📊 Logs
@@ -169,7 +169,7 @@ python manage.py dumpdata shop.Product --indent 2 > products.json
 
 ```bash
 # Se connecter
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Se connecter en root
 sudo mysql -u root
@@ -211,16 +211,16 @@ EXIT;
 
 ```bash
 # Backup
-mysqldump -u gobackma_gaming_user -p gobackma_gaming_db > backup_$(date +%Y%m%d_%H%M%S).sql
+mysqldump -u gobackma_gaming_root -p gobackma_gaming_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Backup compressé
-mysqldump -u gobackma_gaming_user -p gobackma_gaming_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+mysqldump -u gobackma_gaming_root -p gobackma_gaming_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Restore
-mysql -u gobackma_gaming_user -p gobackma_gaming_db < backup.sql
+mysql -u gobackma_gaming_root -p gobackma_gaming_db < backup.sql
 
 # Restore compressé
-gunzip < backup.sql.gz | mysql -u gobackma_gaming_user -p gobackma_gaming_db
+gunzip < backup.sql.gz | mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Script automatique
 /home/gobackma/gaming_backend/backup.sh
@@ -478,7 +478,7 @@ find /home/gobackma/backup -name "*.sql.gz" -mtime +7 -delete
 find /home/gobackma/gaming_backend -type d -name "__pycache__" -exec rm -r {} +
 
 # Optimiser MySQL
-mysql -u gobackma_gaming_user -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_product;"
+mysql -u gobackma_gaming_root -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_product;"
 ```
 
 ### Backup rapide
@@ -488,7 +488,7 @@ mysql -u gobackma_gaming_user -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_prod
 /home/gobackma/gaming_backend/backup.sh
 
 # Backup manuel DB
-mysqldump -u gobackma_gaming_user -p gobackma_gaming_db | gzip > /home/gobackma/backup/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
+mysqldump -u gobackma_gaming_root -p gobackma_gaming_db | gzip > /home/gobackma/backup/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Backup manuel media
 tar -czf /home/gobackma/backup/media_backup_$(date +%Y%m%d_%H%M%S).tar.gz /home/gobackma/public_html/backend/media/

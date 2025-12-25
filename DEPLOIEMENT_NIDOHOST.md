@@ -44,8 +44,8 @@ sudo mysql -u root
 
 # Dans MySQL, créer la base de données et l'utilisateur
 CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
-GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
+CREATE USER 'gobackma_gaming_root'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_root'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -94,7 +94,7 @@ ALLOWED_HOSTS=178.63.126.247,goback.ma,www.goback.ma,api.goback.ma
 
 # Database
 DB_NAME=gobackma_gaming_db
-DB_USER=gobackma_gaming_user
+DB_USER=gobackma_gaming_root
 DB_PASSWORD=VotreMotDePasseSecurisé123!
 DB_HOST=localhost
 DB_PORT=3306
@@ -139,7 +139,7 @@ scp gaming_db_backup.sql gobackma@178.63.126.247:/home/gobackma/
 
 ```bash
 # Importer la base de données
-mysql -u gobackma_gaming_user -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
+mysql -u gobackma_gaming_root -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
 
 # Nettoyer le fichier de backup
 rm /home/gobackma/gaming_db_backup.sql
@@ -318,7 +318,7 @@ sudo supervisorctl status
 sudo systemctl status nginx
 
 # Se connecter à la base de données
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 ```
 
 ## 🔄 Mises à Jour du Code
@@ -438,7 +438,7 @@ sudo supervisorctl restart gaming
 
 ```bash
 # Se connecter à MySQL
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Vérifier les tables
 SHOW TABLES;

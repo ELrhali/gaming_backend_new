@@ -32,8 +32,8 @@ sudo mysql -u root
 Dans MySQL:
 ```sql
 CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseTresFort123!';
-GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
+CREATE USER 'gobackma_gaming_root'@'localhost' IDENTIFIED BY 'VotreMotDePasseTresFort123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_root'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -78,7 +78,7 @@ scp gaming_db_backup.sql gobackma@178.63.126.247:/home/gobackma/
 
 **Sur le serveur**:
 ```bash
-mysql -u gobackma_gaming_user -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
+mysql -u gobackma_gaming_root -p gobackma_gaming_db < /home/gobackma/gaming_db_backup.sql
 rm /home/gobackma/gaming_db_backup.sql
 ```
 
@@ -281,7 +281,7 @@ chmod -R 755 /home/gobackma/public_html/backend
 nano /home/gobackma/gaming_backend/.env
 
 # Tester la connexion MySQL
-mysql -u gobackma_gaming_user -p gobackma_gaming_db
+mysql -u gobackma_gaming_root -p gobackma_gaming_db
 ```
 
 ## 📞 Support

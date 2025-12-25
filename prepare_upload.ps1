@@ -89,7 +89,7 @@ Password: 3`$lL_L3J~UU*
 
 2. IMPORT BASE DE DONNÉES:
    cd /home/gobackma
-   mysql -u gobackma_gaming_user -p gobackma_gaming_db < gaming_db_backup_$Timestamp.sql
+   mysql -u gobackma_gaming_root -p gobackma_gaming_db < gaming_db_backup_$Timestamp.sql
    rm gaming_db_backup_$Timestamp.sql
 
 3. EXTRACTION MEDIA:

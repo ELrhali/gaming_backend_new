@@ -71,8 +71,8 @@ sudo mysql -u root
 
 # Dans MySQL:
 CREATE DATABASE gobackma_gaming_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gobackma_gaming_user'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
-GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_user'@'localhost';
+CREATE USER 'gobackma_gaming_root'@'localhost' IDENTIFIED BY 'VotreMotDePasseSecurisé123!';
+GRANT ALL PRIVILEGES ON gobackma_gaming_db.* TO 'gobackma_gaming_root'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -120,7 +120,7 @@ Utiliser **WinSCP** (recommandé):
 
 ```bash
 cd /home/gobackma
-mysql -u gobackma_gaming_user -p gobackma_gaming_db < gaming_db_backup.sql
+mysql -u gobackma_gaming_root -p gobackma_gaming_db < gaming_db_backup.sql
 rm gaming_db_backup.sql
 ```
 

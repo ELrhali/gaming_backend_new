@@ -10,7 +10,7 @@ from django.utils.text import slugify
 def normalize_name(name):
     """
     Normalise un nom: première lettre de chaque mot en majuscule
-    Exemple: "FOURNITURES SCOLAIRES" -> "Fournitures Scolaires"
+    Exemple: "gaming" -> "gaming"
             "exemple test" -> "Exemple Test"
     """
     if not name:
