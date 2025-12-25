@@ -1392,6 +1392,18 @@ def product_images_import(request):
                     return match.group(1).strip()
             return None
 
+
+        import unicodedata
+        def is_valid_filename(name):
+            # Interdit les emojis et caractères non ASCII
+            try:
+                name.encode('ascii')
+            except UnicodeEncodeError:
+                return False
+            # Interdit certains caractères spéciaux
+            invalid_chars = set('<>:"/\\|?*')
+            return not any(c in invalid_chars for c in name)
+
         for f in files:
             filename = f.name
             ext = os.path.splitext(filename)[1].lower()
@@ -1399,15 +1411,17 @@ def product_images_import(request):
                 logs.append(f"[IGNORÉ] Fichier non image: {filename}")
                 continue
 
-            # On tente d'extraire le nom du produit ou la référence depuis le chemin relatif (si fourni)
-            # Certains navigateurs envoient f.relative_path, sinon on utilise f.name
+            # Vérification du nom de fichier
+            if not is_valid_filename(filename):
+                logs.append(f"[ERREUR] Nom de fichier non valide (emoji ou caractère spécial interdit): {filename}")
+                stats['errors'] += 1
+                continue
+
             rel_path = getattr(f, 'relative_path', filename)
-            # On suppose que la structure est: Produit/Reference/Image ou Produit/Reference/Menu/Image
             path_parts = rel_path.split('/') if '/' in rel_path else rel_path.split('\\')
             product_folder = path_parts[0] if len(path_parts) > 1 else None
             reference_folder = path_parts[1] if len(path_parts) > 2 else None
 
-            # Recherche du produit
             product = None
             reference = None
             if reference_folder:
@@ -1425,12 +1439,10 @@ def product_images_import(request):
                 not_found_products.add(product_folder or rel_path)
                 continue
 
-            # Déterminer si c'est une image principale (si le dossier parent est 'Image')
             is_main = False
             if len(path_parts) > 2 and path_parts[-2].lower() == 'image':
                 is_main = True
 
-            # Générer le nom du fichier de destination
             destination_subdir = 'products/gallery/'
             media_root = os.path.join(settings.BASE_DIR, 'media', destination_subdir)
             os.makedirs(media_root, exist_ok=True)
@@ -1438,31 +1450,26 @@ def product_images_import(request):
             relative_path = os.path.join(destination_subdir, dest_filename)
             destination_path = os.path.join(settings.BASE_DIR, 'media', destination_subdir, dest_filename)
 
-            # Vérifier si cette image existe déjà pour ce produit
             if ProductImage.objects.filter(product=product, image__icontains=dest_filename).exists():
                 logs.append(f"[IGNORÉ] Image déjà existante: {dest_filename}")
                 continue
 
-            # Sauvegarder le fichier uploadé
-            with open(destination_path, 'wb+') as dest:
-                for chunk in f.chunks():
-                    dest.write(chunk)
-
-            # Vérifier l'image
             try:
+                with open(destination_path, 'wb+') as dest:
+                    for chunk in f.chunks():
+                        dest.write(chunk)
                 with Image.open(destination_path) as img:
                     img.verify()
             except Exception as e:
-                logs.append(f"[ERREUR] Image corrompue {dest_filename}: {e}")
-                os.remove(destination_path)
+                logs.append(f"[ERREUR] Erreur lors de l'import de {dest_filename}: {e}")
+                if os.path.exists(destination_path):
+                    os.remove(destination_path)
                 stats['errors'] += 1
                 continue
 
-            # Si c'est l'image principale, supprimer l'ancienne
             if is_main:
                 ProductImage.objects.filter(product=product, is_main=True).delete()
 
-            # Créer l'entrée en base
             ProductImage.objects.create(
                 product=product,
                 image=relative_path,
