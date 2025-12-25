@@ -16,7 +16,7 @@ pymysql.version_info = (2, 2, 1, "final", 0)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env.production')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production-k8$x9@3n#v&2h5j')
