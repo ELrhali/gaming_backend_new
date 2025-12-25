@@ -38,7 +38,7 @@ Tous les fichiers nécessaires pour le déploiement du backend Django sur Nidoho
 Sur Windows, exécutez:
 
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 ```
 
@@ -52,7 +52,7 @@ Ce script va:
 
 1. **Export de la base de données**:
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 mysqldump -u root -p gaming_db > gaming_db_backup.sql
 ```
 
@@ -194,7 +194,7 @@ Frontend URL: https://goback.ma
 
 ```bash
 # Sur votre PC Windows
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 
 # Puis suivre: GUIDE_RAPIDE.md
@@ -306,20 +306,20 @@ Production:     ⏳ Pas encore déployé
 
 ### Sur Windows (préparation)
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 ```
 
 ### Sur le Serveur (déploiement)
 ```bash
 ssh gobackma@178.63.126.247
-cd /home/gobackma && git clone <your-repo-url> gaming_backend
-cd gaming_backend && chmod +x deploy.sh && ./deploy.sh
+cd /home/gobackma && git clone <your-repo-url> goback_backend
+cd goback_backend && chmod +x deploy.sh && ./deploy.sh
 ```
 
 ### Vérification
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 ```

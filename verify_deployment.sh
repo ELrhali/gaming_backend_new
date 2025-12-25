@@ -42,7 +42,7 @@ check_warn() {
 }
 
 echo -e "${BLUE}[1/10] Vérification des répertoires...${NC}"
-test -d "/home/gobackma/gaming_backend"
+test -d "/home/gobackma/goback_backend"
 check "Répertoire backend existe"
 
 test -d "/home/gobackma/venv"
@@ -59,13 +59,13 @@ check "Répertoire logs existe"
 
 echo ""
 echo -e "${BLUE}[2/10] Vérification des fichiers de configuration...${NC}"
-test -f "/home/gobackma/gaming_backend/.env"
+test -f "/home/gobackma/goback_backend/.env"
 check "Fichier .env existe"
 
-test -f "/home/gobackma/gaming_backend/manage.py"
+test -f "/home/gobackma/goback_backend/manage.py"
 check "Fichier manage.py existe"
 
-test -f "/home/gobackma/gaming_backend/gunicorn_config.py"
+test -f "/home/gobackma/goback_backend/gunicorn_config.py"
 check "Configuration Gunicorn existe"
 
 echo ""
@@ -86,7 +86,7 @@ check "PyMySQL est installé"
 
 echo ""
 echo -e "${BLUE}[4/10] Vérification de la base de données...${NC}"
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 
 python manage.py check --database default > /dev/null 2>&1
 check "Connexion base de données OK"
@@ -129,7 +129,7 @@ fi
 
 echo ""
 echo -e "${BLUE}[8/10] Vérification des permissions...${NC}"
-test -r "/home/gobackma/gaming_backend/manage.py"
+test -r "/home/gobackma/goback_backend/manage.py"
 check "Permissions lecture backend OK"
 
 test -w "/home/gobackma/logs"

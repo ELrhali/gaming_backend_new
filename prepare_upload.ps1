@@ -7,7 +7,7 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host ""
 
 # Variables
-$BackendDir = "C:\Users\MSI\Desktop\gaming\gaming_backend"
+$BackendDir = "C:\Users\MSI\Desktop\gaming\goback_backend"
 $ExportDir = "C:\Users\MSI\Desktop\gaming_export"
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 

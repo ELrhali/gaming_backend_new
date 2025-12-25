@@ -10,7 +10,7 @@ echo "  Déploiement gaming Backend - Nidohost  "
 echo "=========================================="
 
 # Variables
-PROJECT_DIR="/home/gobackma/gaming_backend"
+PROJECT_DIR="/home/gobackma/goback_backend"
 VENV_DIR="/home/gobackma/venv"
 PYTHON_VERSION="python3.11"  # Ajuster selon la version disponible sur le serveur
 

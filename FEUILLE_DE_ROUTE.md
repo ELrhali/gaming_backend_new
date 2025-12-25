@@ -27,7 +27,7 @@
 
 ```powershell
 # Dans PowerShell, exécuter:
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 
 # Option A: Script automatique (Recommandé)
 .\prepare_upload.ps1
@@ -81,8 +81,8 @@ EXIT;
 
 ```bash
 cd /home/gobackma
-git clone https://github.com/votre-username/gaming_backend.git
-cd gaming_backend
+git clone https://github.com/votre-username/goback_backend.git
+cd goback_backend
 
 # Environnement Python
 python3.11 -m venv /home/gobackma/venv
@@ -140,7 +140,7 @@ chmod -R 755 /home/gobackma/public_html/backend/media
 ### Phase 4: Configuration Django ⏰ 10 min
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 source /home/gobackma/venv/bin/activate
 
 # Créer répertoires
@@ -215,7 +215,7 @@ sudo mysql_secure_installation
 ### Phase 8: Vérification ⏰ 5 min
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 ```

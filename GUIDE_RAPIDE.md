@@ -41,8 +41,8 @@ EXIT;
 ### 3. Clone du Projet
 ```bash
 cd /home/gobackma
-git clone https://github.com/votre-repo/gaming_backend.git
-cd gaming_backend
+git clone https://github.com/votre-repo/goback_backend.git
+cd goback_backend
 ```
 
 ### 4. Environnement Python
@@ -69,7 +69,7 @@ python3 -c "from django.core.management.utils import get_random_secret_key; prin
 **Sur Windows (local)**:
 ```powershell
 # Export DB
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 mysqldump -u root -p gaming_db > gaming_db_backup.sql
 
 # Upload avec WinSCP ou:
@@ -87,7 +87,7 @@ rm /home/gobackma/gaming_db_backup.sql
 **Sur Windows (local)**:
 ```powershell
 # Compresser
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 Compress-Archive -Path .\media\* -DestinationPath media.zip
 
 # Upload avec WinSCP ou FileZilla
@@ -103,7 +103,7 @@ chmod -R 755 /home/gobackma/public_html/backend/media
 
 ### 8. Django Setup
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 source /home/gobackma/venv/bin/activate
 
 # Créer répertoires
@@ -169,7 +169,7 @@ tail -f /home/gobackma/logs/nginx_error.log
 
 ### Mettre à jour le code
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 git pull origin master
 source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
@@ -187,8 +187,8 @@ netstat -tlnp | grep 8000
 
 ### Backup manuel
 ```bash
-chmod +x /home/gobackma/gaming_backend/backup.sh
-/home/gobackma/gaming_backend/backup.sh
+chmod +x /home/gobackma/goback_backend/backup.sh
+/home/gobackma/goback_backend/backup.sh
 ```
 
 ### Configurer backup automatique (cron)
@@ -198,7 +198,7 @@ crontab -e
 Ajouter:
 ```
 # Backup tous les jours à 2h du matin
-0 2 * * * /home/gobackma/gaming_backend/backup.sh
+0 2 * * * /home/gobackma/goback_backend/backup.sh
 ```
 
 ## 🧪 Tests
@@ -271,14 +271,14 @@ tail -f /home/gobackma/logs/gunicorn_error.log
 
 ### Permission Denied
 ```bash
-sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
+sudo chown -R gobackma:gobackma /home/gobackma/goback_backend
 chmod -R 755 /home/gobackma/public_html/backend
 ```
 
 ### Database Connection Error
 ```bash
 # Vérifier les credentials dans .env
-nano /home/gobackma/gaming_backend/.env
+nano /home/gobackma/goback_backend/.env
 
 # Tester la connexion MySQL
 mysql -u gobackma_gaming_root -p gobackma_gaming_db

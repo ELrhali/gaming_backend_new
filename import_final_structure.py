@@ -14,7 +14,7 @@ from shop.models import Collection, Category, SubCategory, Brand, Product, Produ
 
 # Configuration
 EXCEL_FILE = r'C:\Users\MSI\Desktop\gaming\old_data.xlsx'
-MEDIA_ROOT = Path(r'C:\Users\MSI\Desktop\gaming\gaming_backend\media')
+MEDIA_ROOT = Path(r'C:\Users\MSI\Desktop\gaming\goback_backend\media')
 
 def parse_description(description):
     """Extrait les specifications depuis la description"""

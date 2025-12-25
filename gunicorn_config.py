@@ -20,7 +20,7 @@ loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Process naming
-proc_name = "gaming_backend"
+proc_name = "goback_backend"
 
 # Server mechanics
 daemon = False

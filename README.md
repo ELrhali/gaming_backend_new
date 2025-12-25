@@ -24,7 +24,7 @@ Le backend est configuré et prêt pour le déploiement sur Nidohost. Consultez:
 #### Sur Windows (Préparation):
 
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 ```
 
@@ -33,8 +33,8 @@ cd C:\Users\MSI\Desktop\gaming\gaming_backend
 ```bash
 ssh gobackma@178.63.126.247
 cd /home/gobackma
-git clone https://github.com/votre-repo/gaming_backend.git
-cd gaming_backend
+git clone https://github.com/votre-repo/goback_backend.git
+cd goback_backend
 ./deploy.sh
 ```
 
@@ -60,7 +60,7 @@ Internet (HTTPS) → Nginx (443) → Gunicorn (8000) → Django → MySQL
 ## 📂 Structure du Projet
 
 ```
-gaming_backend/
+goback_backend/
 ├── config/              # Configuration Django
 │   ├── settings.py     # Settings avec support .env
 │   ├── urls.py
@@ -94,8 +94,8 @@ gaming_backend/
 
 ```bash
 # Clone
-git clone https://github.com/votre-repo/gaming_backend.git
-cd gaming_backend
+git clone https://github.com/votre-repo/goback_backend.git
+cd goback_backend
 
 # Environnement virtuel
 python -m venv venv
@@ -228,7 +228,7 @@ Script: [backup.sh](./backup.sh)
 ## 🔄 Mise à Jour du Code
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 git pull origin master
 source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt

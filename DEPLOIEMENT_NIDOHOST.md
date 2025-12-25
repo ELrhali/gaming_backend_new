@@ -54,8 +54,8 @@ EXIT;
 
 ```bash
 cd /home/gobackma
-git clone https://github.com/votre-username/gaming_backend.git
-cd gaming_backend
+git clone https://github.com/votre-username/goback_backend.git
+cd goback_backend
 ```
 
 ### 5. Configuration de l'Environnement Python
@@ -107,7 +107,7 @@ CSRF_TRUSTED_ORIGINS=https://goback.ma,https://www.goback.ma,https://api.goback.
 STATIC_URL=/static/
 STATIC_ROOT=/home/gobackma/public_html/backend/staticfiles
 MEDIA_URL=/media/
-MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
+MEDIA_ROOT=/home/gobackma/public_html/goback_backend/media
 ```
 
 **Pour générer une SECRET_KEY sécurisée**:
@@ -124,7 +124,7 @@ python3 -c "from django.core.management.utils import get_random_secret_key; prin
 
 ```powershell
 # Dans le terminal PowerShell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 
 # Export de la base de données locale
 # Assurez-vous que MySQL est installé localement
@@ -150,7 +150,7 @@ rm /home/gobackma/gaming_db_backup.sql
 **Sur votre machine locale**:
 
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 2 > datadump.json
 ```
 
@@ -191,7 +191,7 @@ chmod -R 755 /home/gobackma/public_html/backend/media
 ### 9. Django - Migrations et Collecte des Fichiers Statiques
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 source /home/gobackma/venv/bin/activate
 
 # Créer les répertoires nécessaires
@@ -326,7 +326,7 @@ mysql -u gobackma_gaming_root -p gobackma_gaming_db
 Pour mettre à jour le code après des modifications:
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 git pull origin master
 
 source /home/gobackma/venv/bin/activate
@@ -368,11 +368,11 @@ sudo mysql_secure_installation
 
 ```bash
 # Propriétaire correct
-sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
+sudo chown -R gobackma:gobackma /home/gobackma/goback_backend
 sudo chown -R gobackma:gobackma /home/gobackma/public_html
 
 # Permissions appropriées
-chmod -R 755 /home/gobackma/gaming_backend
+chmod -R 755 /home/gobackma/goback_backend
 chmod -R 755 /home/gobackma/public_html/backend/staticfiles
 chmod -R 755 /home/gobackma/public_html/backend/media
 ```
@@ -444,7 +444,7 @@ mysql -u gobackma_gaming_root -p gobackma_gaming_db
 SHOW TABLES;
 
 # Vérifier les migrations Django
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 source /home/gobackma/venv/bin/activate
 python manage.py showmigrations
 ```

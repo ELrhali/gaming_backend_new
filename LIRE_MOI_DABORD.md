@@ -45,7 +45,7 @@ Tous les fichiers nécessaires pour déployer votre backend Django sur Nidohost 
 Ouvrez PowerShell et exécutez:
 
 ```powershell
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 ```
 
@@ -279,7 +279,7 @@ Une fois le backend déployé et fonctionnel, vous pourrez:
 ### Option 1: Déploiement Immédiat
 
 1. Ouvrez PowerShell
-2. Exécutez: `cd C:\Users\MSI\Desktop\gaming\gaming_backend`
+2. Exécutez: `cd C:\Users\MSI\Desktop\gaming\goback_backend`
 3. Exécutez: `.\prepare_upload.ps1`
 4. Ouvrez: [GUIDE_RAPIDE.md](./GUIDE_RAPIDE.md)
 5. Suivez les étapes!
@@ -316,7 +316,7 @@ Voici LA séquence pour démarrer:
 
 ```powershell
 # 1. Préparation (Windows)
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 .\prepare_upload.ps1
 
 # 2. Connexion (SSH)

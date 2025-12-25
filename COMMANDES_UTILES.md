@@ -8,7 +8,7 @@ ssh gobackma@178.63.126.247
 # Password: 3$lL_L3J~UU*
 
 # Aller dans le projet
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 
 # Activer l'environnement virtuel
 source /home/gobackma/venv/bin/activate
@@ -127,7 +127,7 @@ grep "ERROR" /home/gobackma/logs/gunicorn_error.log | tail -20
 ## 🐍 Django Management
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 source /home/gobackma/venv/bin/activate
 
 # Vérifier la configuration
@@ -223,7 +223,7 @@ mysql -u gobackma_gaming_root -p gobackma_gaming_db < backup.sql
 gunzip < backup.sql.gz | mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Script automatique
-/home/gobackma/gaming_backend/backup.sh
+/home/gobackma/goback_backend/backup.sh
 ```
 
 ## 📁 Fichiers et Répertoires
@@ -232,7 +232,7 @@ gunzip < backup.sql.gz | mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 ```bash
 # Répertoire projet
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 
 # Logs
 cd /home/gobackma/logs
@@ -251,13 +251,13 @@ cd /home/gobackma/backup
 
 ```bash
 # Voir les permissions
-ls -la /home/gobackma/gaming_backend
+ls -la /home/gobackma/goback_backend
 
 # Changer le propriétaire
-sudo chown -R gobackma:gobackma /home/gobackma/gaming_backend
+sudo chown -R gobackma:gobackma /home/gobackma/goback_backend
 
 # Changer les permissions
-chmod -R 755 /home/gobackma/gaming_backend
+chmod -R 755 /home/gobackma/goback_backend
 chmod -R 755 /home/gobackma/public_html/backend
 
 # Permissions media (lecture/écriture)
@@ -277,7 +277,7 @@ df -h
 du -sh /home/gobackma/*
 
 # Taille du projet
-du -sh /home/gobackma/gaming_backend
+du -sh /home/gobackma/goback_backend
 
 # Taille des media
 du -sh /home/gobackma/public_html/backend/media
@@ -294,7 +294,7 @@ find /home/gobackma/logs -name "*.log" -mtime +30 -delete
 ### Depuis GitHub
 
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 
 # Vérifier le statut Git
 git status
@@ -324,7 +324,7 @@ sudo supervisorctl restart gaming
 # Utiliser WinSCP ou scp
 
 # Depuis Windows (PowerShell)
-scp C:\path\to\file.py gobackma@178.63.126.247:/home/gobackma/gaming_backend/
+scp C:\path\to\file.py gobackma@178.63.126.247:/home/gobackma/goback_backend/
 
 # Redémarrer après modification
 sudo supervisorctl restart gaming
@@ -475,7 +475,7 @@ find /home/gobackma/logs -name "*.log" -mtime +30 -delete
 find /home/gobackma/backup -name "*.sql.gz" -mtime +7 -delete
 
 # Nettoyer le cache Python
-find /home/gobackma/gaming_backend -type d -name "__pycache__" -exec rm -r {} +
+find /home/gobackma/goback_backend -type d -name "__pycache__" -exec rm -r {} +
 
 # Optimiser MySQL
 mysql -u gobackma_gaming_root -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_product;"
@@ -485,7 +485,7 @@ mysql -u gobackma_gaming_root -p -e "OPTIMIZE TABLE gobackma_gaming_db.shop_prod
 
 ```bash
 # Backup complet
-/home/gobackma/gaming_backend/backup.sh
+/home/gobackma/goback_backend/backup.sh
 
 # Backup manuel DB
 mysqldump -u gobackma_gaming_root -p gobackma_gaming_db | gzip > /home/gobackma/backup/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
@@ -554,7 +554,7 @@ curl http://127.0.0.1:8000/api/products/
 
 ```bash
 # Script de vérification
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 chmod +x verify_deployment.sh
 ./verify_deployment.sh
 
@@ -592,7 +592,7 @@ free -h
 nano ~/.bashrc
 
 # Ajouter ces alias
-alias gaming='cd /home/gobackma/gaming_backend && source /home/gobackma/venv/bin/activate'
+alias gaming='cd /home/gobackma/goback_backend && source /home/gobackma/venv/bin/activate'
 alias logs='tail -f /home/gobackma/logs/gunicorn_error.log'
 alias restart='sudo supervisorctl restart gaming'
 alias status='sudo supervisorctl status && sudo systemctl status nginx --no-pager'

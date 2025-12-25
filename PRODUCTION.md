@@ -27,7 +27,7 @@ Sur votre machine Windows:
 
 ```powershell
 # Aller dans le répertoire backend
-cd C:\Users\MSI\Desktop\gaming\gaming_backend
+cd C:\Users\MSI\Desktop\gaming\goback_backend
 
 # Export de la base de données
 mysqldump -u root -p gaming_db > gaming_db_backup.sql
@@ -88,7 +88,7 @@ CSRF_TRUSTED_ORIGINS=https://goback.ma,https://www.goback.ma,https://api.goback.
 
 # Chemins
 STATIC_ROOT=/home/gobackma/public_html/backend/staticfiles
-MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
+MEDIA_ROOT=/home/gobackma/public_html/goback_backend/media
 ```
 
 ## 📊 Architecture de Production
@@ -133,7 +133,7 @@ MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
 
 ```
 /home/gobackma/
-├── gaming_backend/           # Code source
+├── goback_backend/           # Code source
 │   ├── config/
 │   ├── shop/
 │   ├── orders/
@@ -173,7 +173,7 @@ MEDIA_ROOT=/home/gobackma/public_html/gaming_backend/media
 
 Commandes:
 ```bash
-cd /home/gobackma/gaming_backend
+cd /home/gobackma/goback_backend
 git pull origin master
 source /home/gobackma/venv/bin/activate
 pip install -r requirements.txt
@@ -232,7 +232,7 @@ free -h
 ### Backup manuel:
 
 ```bash
-/home/gobackma/gaming_backend/backup.sh
+/home/gobackma/goback_backend/backup.sh
 ```
 
 ## 🐛 Dépannage
@@ -259,7 +259,7 @@ sudo systemctl restart nginx
 mysql -u gobackma_gaming_root -p gobackma_gaming_db
 
 # Vérifier .env
-cat /home/gobackma/gaming_backend/.env
+cat /home/gobackma/goback_backend/.env
 ```
 
 ## 📞 Support & Documentation
