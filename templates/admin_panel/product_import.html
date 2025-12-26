@@ -17,6 +17,9 @@
                         Importez plusieurs produits en une seule fois avec toutes leurs relations (catégories, sous-catégories, marques, types, caractéristiques)
                     </p>
                 </div>
+                     <a href="{% url 'admin_panel:export_products_excel' %}" class="btn btn-success btn-sm me-2">
+                            <i class="fas fa-file-excel me-1"></i>Télécharger Excel Produits
+                        </a>
                 <a href="{% url 'admin_panel:product_list' %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Retour aux Produits
                 </a>
@@ -128,7 +131,18 @@
             </div>
         </div>
     </div>
-
+                    <!-- Bouton téléchargement Excel -->
+                    <div class="alert alert-success alert-permanent mb-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="me-3 mb-2 mb-md-0">
+                                <h6 class="alert-heading mb-1"><i class="fas fa-file-excel me-2"></i>📥 Télécharger la liste des produits</h6>
+                                <p class="mb-0 small">Téléchargez le fichier Excel contenant tous vos produits avec leurs <strong>références</strong> et <strong>noms</strong> pour organiser vos dossiers d'images.</p>
+                            </div>
+                            <a href="{% url 'admin_panel:export_products_excel' %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-download me-2"></i>Télécharger Excel
+                            </a>
+                        </div>
+                    </div>
     <!-- Formulaire d'importation -->
     <div class="row">
         <div class="col-lg-8 mx-auto">
