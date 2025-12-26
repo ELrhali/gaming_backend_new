@@ -1,11 +1,31 @@
 {% extends 'admin_panel/base.html' %}
+{% load static %}
 
 {% block title %}Importation des Images de Produits{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row">
-                        <!-- Champ texte supprimé : import uniquement par upload web -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-images me-2"></i>Importation des Images de Produits
+                    </h5>
+                    <div>
+                        <a href="{% url 'admin_panel:export_products_excel' %}" class="btn btn-success btn-sm me-2">
+                            <i class="fas fa-file-excel me-1"></i>Télécharger Excel Produits
+                        </a>
+                        <a href="{% url 'admin_panel:product_list' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Retour aux produits
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Afficher les messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="white-space: pre-line;">
                                 {{ message }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
@@ -40,60 +60,214 @@
                         </div>
                     </div>
 
-                    <!-- Instructions -->
+                    <!-- Bouton téléchargement Excel -->
+                    <div class="alert alert-success alert-permanent mb-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="me-3 mb-2 mb-md-0">
+                                <h6 class="alert-heading mb-1"><i class="fas fa-file-excel me-2"></i>📥 Télécharger la liste des produits</h6>
+                                <p class="mb-0 small">Téléchargez le fichier Excel contenant tous vos produits avec leurs <strong>références</strong> et <strong>noms</strong> pour organiser vos dossiers d'images.</p>
+                            </div>
+                            <a href="{% url 'admin_panel:export_products_excel' %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-download me-2"></i>Télécharger Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Instructions détaillées -->
                     <div class="alert alert-info alert-permanent">
-                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Instructions</h6>
-                        <p class="mb-2">Ce formulaire permet d'importer automatiquement les images de vos produits depuis un dossier sur votre ordinateur.</p>
+                        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>📋 Guide d'importation des images - Étape par étape</h5>
+                        <hr>
                         
-                        <div class="alert alert-warning alert-permanent py-2 mb-2">
-                            <small>
-                                <i class="bi bi-aspect-ratio"></i> <strong>📐 Dimension recommandée des images:</strong> 600 x 600 px (carré 1:1)<br>
-                                <i class="bi bi-file-image"></i> <strong>Format:</strong> WebP ou JPG recommandé (PNG, GIF aussi acceptés) | <strong>Taille max:</strong> 100 KB<br>
-                                <i class="bi bi-palette"></i> <strong>Conseil:</strong> Fond blanc préféré pour un meilleur rendu sur mobile
-                            </small>
+                        <!-- Étape 0: Prérequis -->
+                        <div class="mb-4">
+                            <h6 class="text-primary"><i class="fas fa-download me-1"></i> Étape 0 : Préparer votre travail</h6>
+                            <ol class="mb-2">
+                                <li><strong>Téléchargez le fichier Excel</strong> en cliquant sur le bouton vert ci-dessus</li>
+                                <li>Ce fichier contient la <strong>Référence</strong> et le <strong>Nom</strong> de chaque produit dans la base de données</li>
+                                <li>Utilisez ces informations pour créer vos dossiers d'images</li>
+                            </ol>
+                        </div>
+
+                        <!-- Spécifications images -->
+                        <div class="alert alert-warning alert-permanent py-2 mb-4">
+                            <h6 class="mb-2"><i class="fas fa-camera me-1"></i> Spécifications des images</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small>
+                                        <strong>📐 Dimension recommandée:</strong> 600 x 600 px (carré 1:1)<br>
+                                        <strong>📁 Format:</strong> WebP ou JPG recommandé (PNG, GIF aussi acceptés)
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small>
+                                        <strong>📊 Taille max:</strong> 100 KB par image<br>
+                                        <strong>🎨 Conseil:</strong> Fond blanc préféré pour un meilleur rendu
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                         
                         <hr>
-                        <p class="mb-1"><strong>Structure attendue du dossier :</strong></p>
-                        <ul class="mb-2">
-                            <li><code>Dossier principal/</code>
-                                <ul>
-                                    <li><code>Nom du Produit/</code> (doit correspondre au nom dans la base de données)
-                                        <ul>
-                                            <li><code>Référence du Produit/</code> (ex: BT000050)
-                                                <ul>
-                                                    <li><code>Image/</code> - Contient l'image principale du produit</li>
-                                                    <li><code>Menu/</code> - Contient les images supplémentaires du produit</li>
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <p class="mb-1"><strong>Exemple de chemin :</strong></p>
-                        <code>C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang</code>
-                        <p class="mt-2 mb-0"><small class="text-muted">
+                        
+                        <!-- Étape 1: Structure du dossier -->
+                        <div class="mb-4">
+                            <h6 class="text-primary"><i class="fas fa-folder me-1"></i> Étape 1 : Créer la structure des dossiers</h6>
+                            <p class="mb-2">Organisez vos images dans une structure de dossiers comme suit :</p>
+                            
+                            <div class="bg-dark text-light p-3 rounded mb-3" style="font-family: monospace; font-size: 0.9rem;">
+                                <div><i class="fas fa-folder text-warning"></i> <strong>Dossier Principal</strong> (ex: Produits Mustang)</div>
+                                <div class="ms-4"><i class="fas fa-folder text-info"></i> Nom du Produit 1</div>
+                                <div class="ms-5"><i class="fas fa-folder text-success"></i> <strong>BT000050</strong> (Référence du produit)</div>
+                                <div class="ms-5 text-muted">│</div>
+                                <div class="ms-5"><i class="fas fa-folder text-danger"></i> <strong>Image</strong> → Contient l'image principale</div>
+                                <div class="ms-5 text-muted">│   └── photo_principale.webp</div>
+                                <div class="ms-5"><i class="fas fa-folder text-danger"></i> <strong>Menu</strong> → Contient les images supplémentaires</div>
+                                <div class="ms-5 text-muted">    └── photo_2.webp, photo_3.webp, ...</div>
+                                <div class="ms-4"><i class="fas fa-folder text-info"></i> Nom du Produit 2</div>
+                                <div class="ms-5"><i class="fas fa-folder text-success"></i> <strong>PC000123</strong> (Référence)</div>
+                                <div class="ms-5 text-muted">│</div>
+                                <div class="ms-5"><i class="fas fa-folder text-danger"></i> Image</div>
+                                <div class="ms-5"><i class="fas fa-folder text-danger"></i> Menu</div>
+                                <div class="ms-4">...</div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Captures d'écran étape par étape -->
+                        <div class="mb-4">
+                            <h6 class="text-primary"><i class="fas fa-images me-1"></i> Étape 2 : Visualisation de la structure (Captures d'écran)</h6>
+                            
+                            <div class="row">
+                                <!-- Capture 1: Dossier principal -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100 border-primary">
+                                        <div class="card-header bg-primary text-white py-2">
+                                            <small><strong>📁 1. Dossier Principal</strong></small>
+                                        </div>
+                                        <div class="card-body p-2 text-center">
+                                            <img src="/media/dossier_principale.png" alt="Dossier principal" class="img-fluid rounded border" style="max-height: 200px; cursor: pointer;" onclick="openImageModal(this.src, 'Dossier Principal - Contient les sous-dossiers pour chaque produit')">
+                                            <p class="small text-muted mt-2 mb-0">
+                                                <i class="fas fa-info-circle"></i> Le dossier principal contient un sous-dossier pour <strong>chaque produit</strong> (nommé avec le nom du produit)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Capture 2: Dossier produit -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100 border-info">
+                                        <div class="card-header bg-info text-white py-2">
+                                            <small><strong>📂 2. Dans le dossier produit</strong></small>
+                                        </div>
+                                        <div class="card-body p-2 text-center">
+                                            <img src="/media/entre_dans_nom_dossier.png" alt="Dossier produit" class="img-fluid rounded border" style="max-height: 200px; cursor: pointer;" onclick="openImageModal(this.src, 'Dossier Produit - Contient le sous-dossier de référence')">
+                                            <p class="small text-muted mt-2 mb-0">
+                                                <i class="fas fa-info-circle"></i> À l'intérieur, on trouve un dossier nommé avec la <strong>référence du produit</strong> (ex: BT000050)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Capture 3: Dossier référence -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-header bg-success text-white py-2">
+                                            <small><strong>🖼️ 3. Dans le dossier référence</strong></small>
+                                        </div>
+                                        <div class="card-body p-2 text-center">
+                                            <img src="/media/entre_dans_reference.png" alt="Dossier référence" class="img-fluid rounded border" style="max-height: 200px; cursor: pointer;" onclick="openImageModal(this.src, 'Dossier Référence - Contient les dossiers Image et Menu')">
+                                            <p class="small text-muted mt-2 mb-0">
+                                                <i class="fas fa-info-circle"></i> On trouve deux dossiers: <strong>Image</strong> (photo principale) et <strong>Menu</strong> (photos supplémentaires)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Étape 3: Comprendre les dossiers -->
+                        <div class="mb-4">
+                            <h6 class="text-primary"><i class="fas fa-lightbulb me-1"></i> Étape 3 : Comprendre les dossiers Image et Menu</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-danger mb-3">
+                                        <div class="card-header bg-danger text-white py-2">
+                                            <i class="fas fa-star me-1"></i> Dossier <strong>Image</strong>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li>Contient <strong>l'image principale</strong> du produit</li>
+                                                <li>C'est la première image affichée sur la fiche produit</li>
+                                                <li>Une seule image sera prise (la première par ordre alphabétique)</li>
+                                                <li>Utilisée comme vignette dans les listes de produits</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-dark py-2">
+                                            <i class="fas fa-images me-1"></i> Dossier <strong>Menu</strong>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <ul class="mb-0 small">
+                                                <li>Contient les <strong>images supplémentaires</strong> (galerie)</li>
+                                                <li>Ces images s'affichent dans le carrousel de la fiche produit</li>
+                                                <li>Toutes les images du dossier seront importées</li>
+                                                <li>Montrez différents angles, détails, accessoires...</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Étape 4: Lancer l'import -->
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-play me-1"></i> Étape 4 : Lancer l'importation</h6>
+                            <ol class="mb-0">
+                                <li>Copiez le chemin complet de votre <strong>dossier principal</strong></li>
+                                <li>Collez-le dans le champ ci-dessous</li>
+                                <li>Cliquez sur <strong>"Démarrer l'importation"</strong></li>
+                                <li>Consultez les logs pour voir le résultat de chaque produit</li>
+                            </ol>
+                        </div>
+                        
+                        <hr>
+                        
+                        <p class="mb-0"><small class="text-muted">
                             <i class="fas fa-lightbulb me-1"></i>
-                            La recherche des produits est insensible à la casse (majuscules/minuscules).
+                            <strong>Astuce :</strong> La recherche des produits utilise la <strong>référence</strong> du sous-dossier (ex: BT000050) pour trouver le produit correspondant dans la base de données. Assurez-vous que les références correspondent exactement.
                         </small></p>
                     </div>
 
                     <!-- Formulaire d'importation -->
-                    <form method="post" id="importForm" enctype="multipart/form-data">
+                    <form method="post" id="importForm">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="images" class="form-label">
-                                <i class="fas fa-folder-open me-1"></i>Sélectionner les images ou un dossier
+                            <label for="images_path" class="form-label">
+                                <i class="fas fa-folder-open me-1"></i>Chemin du dossier principal d'images
                             </label>
-                            <input type="file" class="form-control" id="images" name="images" multiple webkitdirectory directory>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="images_path" 
+                                   name="images_path" 
+                                   placeholder="C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang"
+                                   value="C:\Users\MSI\Desktop\all-image-produits\Produits Mustang\Produits Mustang"
+                                   required>
                             <small class="form-text text-muted">
-                                Sélectionnez un dossier ou plusieurs images à importer. La structure des dossiers sera conservée.
+                                <i class="fas fa-info-circle me-1"></i>Entrez le chemin complet du dossier principal contenant les sous-dossiers de chaque produit
                             </small>
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="submit" class="btn btn-primary" id="importBtn">
+                            <button type="submit" class="btn btn-primary btn-lg" id="importBtn">
                                 <i class="fas fa-upload me-2"></i>Démarrer l'importation
                             </button>
                         </div>
@@ -103,15 +277,18 @@
                     {% if import_logs %}
                     <div class="mt-4">
                         <div class="card">
-                            <div class="card-header bg-secondary text-white">
+                            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
                                     <i class="fas fa-list me-2"></i>Logs d'importation détaillés
                                 </h6>
+                                <span class="badge bg-light text-dark">{{ import_logs|length }} entrées</span>
                             </div>
-                            <div class="card-body">
-                                <div style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                            <div class="card-body p-0">
+                                <div style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;" class="p-3">
                                     {% for log in import_logs %}
-                                        <div class="mb-1">{{ log }}</div>
+                                        <div class="mb-1 {% if '[OK]' in log %}text-success{% elif '[ERREUR]' in log %}text-danger{% elif '[ATTENTION]' in log %}text-warning{% else %}text-muted{% endif %}">
+                                            {{ log }}
+                                        </div>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -119,6 +296,21 @@
                     </div>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour agrandir les images -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="" id="modalImage" class="img-fluid rounded" alt="Image agrandie">
             </div>
         </div>
     </div>
@@ -144,6 +336,23 @@
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
+    
+    .alert-permanent {
+        /* Ne pas permettre la fermeture */
+    }
+    
+    .card-body img {
+        transition: transform 0.2s;
+    }
+    
+    .card-body img:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Style pour les logs colorés */
+    .text-success { color: #198754 !important; }
+    .text-danger { color: #dc3545 !important; }
+    .text-warning { color: #856404 !important; }
 </style>
 
 <script>
@@ -152,5 +361,12 @@ document.getElementById('importForm').addEventListener('submit', function(e) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importation en cours...';
 });
+
+function openImageModal(src, title) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModalTitle').textContent = title;
+    var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+}
 </script>
 {% endblock %}

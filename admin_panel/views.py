@@ -1352,156 +1352,495 @@ def product_import(request):
 
 # ==================== Importation des Images ====================
 
+
+
 @login_required
 def product_images_import(request):
-    """Importation des images de produits via upload web (multi-fichiers)"""
-    from django.db.models.functions import Lower
-    from PIL import Image
-    import shutil
-    import os
-    from django.conf import settings
-    import re
-
+    """Page d'importation des images de produits depuis un dossier"""
     if request.method == 'POST':
-        files = request.FILES.getlist('images')
-        if not files:
-            messages.error(request, "Aucun fichier reçu. Veuillez sélectionner des images ou un dossier.")
+        images_path = request.POST.get('images_path', '').strip()
+        
+        if not images_path:
+            messages.error(request, 'Veuillez fournir le chemin du dossier d\'images.')
             return redirect('admin_panel:product_images_import')
-
+        
+        # Vérifier que le chemin existe
+        if not os.path.exists(images_path):
+            messages.error(request, f'Le chemin "{images_path}" n\'existe pas.')
+            return redirect('admin_panel:product_images_import')
+        
+        # Vérifier que c'est un dossier
+        if not os.path.isdir(images_path):
+            messages.error(request, f'"{images_path}" n\'est pas un dossier valide.')
+            return redirect('admin_panel:product_images_import')
+        
+        # Importer le script d'importation des images
+        import sys
+        from pathlib import Path
+        from PIL import Image
+        import shutil
+        from django.db.models.functions import Lower
+        
+        # Extensions d'images autorisées
         IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
-        logs = []
-        stats = {'total': len(files), 'success': 0, 'not_found': 0, 'errors': 0}
-        not_found_products = set()
-
+        
         def normalize_name(name):
+            """Normalise un nom pour la comparaison (minuscules, espaces supprimés)"""
             return name.lower().strip()
-
-        def extract_reference_from_name(name):
+        
+        def extract_reference_from_folder_name(folder_name):
+            """Extrait le numéro de référence du nom du dossier
+            
+            Exemples:
+            - "Carte mère ASUS ROG STRIX Z690-A GAMING WIFI D4" -> "Z690-A"
+            - "Processeur Intel Core i7-12700K" -> "i7-12700K"
+            - "MSI RTX 4090 GAMING X TRIO 24G" -> "RTX 4090" ou "4090"
+            
+            La fonction cherche les patterns courants de références:
+            - Références avec tirets (ex: i7-12700K, RTX-4090)
+            - Références alphanumériques (ex: Z690A, RTX4090)
+            - Nombres seuls si précédés d'une marque connue
+            """
+            import re
+            
+            # Patterns de références courants
             patterns = [
-                r'\b([A-Z0-9]+-[A-Z0-9-]+)\b',
-                r'\b(RTX\s*\d{4}\s*[A-Z]*|GTX\s*\d{4}\s*[A-Z]*)\b',
-                r'\b(RX\s*\d{4}\s*[A-Z]*)\b',
-                r'\b([iI][3579]-\d{4,5}[A-Z]{0,2})\b',
-                r'\b(Ryzen\s*[3579]\s*\d{4}[A-Z]{0,2})\b',
-                r'\b([A-Z]\d{3,4}[A-Z]*-[A-Z0-9]+)\b',
-                r'\b([A-Z]{2,}\d{3,})\b',
+                r'\b([A-Z0-9]+-[A-Z0-9-]+)\b',  # Format avec tirets: i7-12700K, RTX-4090
+                r'\b(RTX\s*\d{4}\s*[A-Z]*|GTX\s*\d{4}\s*[A-Z]*)\b',  # Cartes graphiques NVIDIA
+                r'\b(RX\s*\d{4}\s*[A-Z]*)\b',  # Cartes graphiques AMD
+                r'\b([iI][3579]-\d{4,5}[A-Z]{0,2})\b',  # Processeurs Intel
+                r'\b(Ryzen\s*[3579]\s*\d{4}[A-Z]{0,2})\b',  # Processeurs AMD Ryzen
+                r'\b([A-Z]\d{3,4}[A-Z]*-[A-Z0-9]+)\b',  # Format type Z690-A, B550-F
+                r'\b([A-Z]{2,}\d{3,})\b',  # Format alphanumérique: RTX4090, Z690A
             ]
+            
             for pattern in patterns:
-                match = re.search(pattern, name, re.IGNORECASE)
+                match = re.search(pattern, folder_name, re.IGNORECASE)
                 if match:
                     return match.group(1).strip()
+            
             return None
-
-
-        import unicodedata
-        def is_valid_filename(name):
-            # Interdit les emojis et caractères non ASCII
+        
+        def find_product_by_reference(folder_name):
+            """Trouve un produit par son numéro de référence extrait du nom du dossier
+            
+            1. Extrait la référence du nom du dossier
+            2. Cherche dans la base de données en comparant avec le champ 'reference'
+            3. Si pas trouvé, cherche dans le nom du produit
+            """
+            # Extraire la référence du nom du dossier
+            reference = extract_reference_from_folder_name(folder_name)
+            
+            if not reference:
+                # Fallback: chercher par nom complet
+                normalized_search = normalize_name(folder_name)
+                products = Product.objects.annotate(name_lower=Lower('name'))
+                for product in products:
+                    if normalize_name(product.name) == normalized_search:
+                        return product, None
+                return None, None
+            
+            # Nettoyer la référence
+            reference_clean = reference.upper().strip()
+            
+            # 1. Chercher d'abord dans le champ reference (correspondance exacte)
+            product = Product.objects.filter(reference__iexact=reference_clean).first()
+            if product:
+                return product, reference
+            
+            # 2. Chercher dans le champ reference (contient)
+            product = Product.objects.filter(reference__icontains=reference_clean).first()
+            if product:
+                return product, reference
+            
+            # 3. Chercher dans le nom du produit (contient la référence)
+            product = Product.objects.filter(name__icontains=reference).first()
+            if product:
+                return product, reference
+            
+            # 4. Fallback: chercher par nom complet du dossier
+            normalized_search = normalize_name(folder_name)
+            products = Product.objects.annotate(name_lower=Lower('name'))
+            for product in products:
+                if normalize_name(product.name) == normalized_search:
+                    return product, reference
+            
+            return None, reference
+        
+        def get_image_files(directory):
+            """Récupère tous les fichiers images d'un dossier"""
+            if not os.path.exists(directory):
+                return []
+            
+            image_files = []
+            for file in os.listdir(directory):
+                file_path = os.path.join(directory, file)
+                if os.path.isfile(file_path):
+                    ext = os.path.splitext(file)[1].lower()
+                    if ext in IMAGE_EXTENSIONS:
+                        image_files.append(file_path)
+            
+            return sorted(image_files)
+        
+        def copy_image_to_media(source_path, product, is_main=False):
+            """Copie une image vers le dossier media et crée l'entrée en base"""
             try:
-                name.encode('ascii')
-            except UnicodeEncodeError:
-                return False
-            # Interdit certains caractères spéciaux
-            invalid_chars = set('<>:"/\\|?*')
-            return not any(c in invalid_chars for c in name)
-
-        for f in files:
-            filename = f.name
-            ext = os.path.splitext(filename)[1].lower()
-            if ext not in IMAGE_EXTENSIONS:
-                logs.append(f"[IGNORÉ] Fichier non image: {filename}")
-                continue
-
-            # Vérification du nom de fichier
-            if not is_valid_filename(filename):
-                logs.append(f"[ERREUR] Nom de fichier non valide (emoji ou caractère spécial interdit): {filename}")
-                stats['errors'] += 1
-                continue
-
-            rel_path = getattr(f, 'relative_path', filename)
-            path_parts = rel_path.split('/') if '/' in rel_path else rel_path.split('\\')
-            product_folder = path_parts[0] if len(path_parts) > 1 else None
-            reference_folder = path_parts[1] if len(path_parts) > 2 else None
-
-            product = None
-            reference = None
-            if reference_folder:
-                reference = extract_reference_from_name(reference_folder)
-                if reference:
-                    product = Product.objects.filter(reference__iexact=reference.upper().strip()).first()
-                if not product:
-                    product = Product.objects.filter(name__icontains=product_folder).first()
-            elif product_folder:
-                product = Product.objects.filter(name__icontains=product_folder).first()
-
-            if not product:
-                logs.append(f"[ATTENTION] Produit non trouvé pour: {rel_path}")
-                stats['not_found'] += 1
-                not_found_products.add(product_folder or rel_path)
-                continue
-
-            is_main = False
-            if len(path_parts) > 2 and path_parts[-2].lower() == 'image':
-                is_main = True
-
-            destination_subdir = 'products/gallery/'
-            media_root = os.path.join(settings.BASE_DIR, 'media', destination_subdir)
-            os.makedirs(media_root, exist_ok=True)
-            dest_filename = f"{product.reference}_{filename}"
-            relative_path = os.path.join(destination_subdir, dest_filename)
-            destination_path = os.path.join(settings.BASE_DIR, 'media', destination_subdir, dest_filename)
-
-            if ProductImage.objects.filter(product=product, image__icontains=dest_filename).exists():
-                logs.append(f"[IGNORÉ] Image déjà existante: {dest_filename}")
-                continue
-
-            try:
-                with open(destination_path, 'wb+') as dest:
-                    for chunk in f.chunks():
-                        dest.write(chunk)
-                with Image.open(destination_path) as img:
-                    img.verify()
+                # Vérifier que le fichier existe
+                if not os.path.exists(source_path):
+                    return False, f"Fichier introuvable: {source_path}"
+                
+                # Générer le nom du fichier de destination
+                filename = os.path.basename(source_path)
+                destination_subdir = 'products/gallery/'
+                
+                # Chemin relatif pour Django (depuis media/)
+                relative_path = os.path.join(destination_subdir, filename)
+                
+                # Vérifier si cette image existe déjà pour ce produit (basé sur le nom du fichier)
+                existing_image = ProductImage.objects.filter(
+                    product=product,
+                    image__icontains=filename
+                ).first()
+                
+                if existing_image:
+                    return False, f"Image déjà existante (ignorée): {filename}"
+                
+                # Ouvrir et vérifier l'image
+                try:
+                    with Image.open(source_path) as img:
+                        img.verify()
+                except Exception as e:
+                    return False, f"Image corrompue {os.path.basename(source_path)}: {e}"
+                
+                # Créer le dossier de destination s'il n'existe pas
+                media_root = os.path.join(settings.BASE_DIR, 'media', destination_subdir)
+                os.makedirs(media_root, exist_ok=True)
+                
+                # Chemin absolu pour la copie
+                destination_path = os.path.join(settings.BASE_DIR, 'media', relative_path)
+                
+                # Copier le fichier seulement s'il n'existe pas déjà
+                if not os.path.exists(destination_path):
+                    shutil.copy2(source_path, destination_path)
+                
+                # Si c'est l'image principale et qu'une image principale existe déjà, la remplacer
+                if is_main:
+                    # Supprimer l'ancienne image principale si elle existe
+                    ProductImage.objects.filter(product=product, is_main=True).delete()
+                
+                # Créer l'entrée dans la base de données
+                product_image = ProductImage.objects.create(
+                    product=product,
+                    image=relative_path,
+                    is_main=is_main,
+                    order=0 if is_main else ProductImage.objects.filter(product=product).count()
+                )
+                
+                return True, f"Image {'principale' if is_main else 'ajoutée'}: {filename}"
+                
             except Exception as e:
-                logs.append(f"[ERREUR] Erreur lors de l'import de {dest_filename}: {e}")
-                if os.path.exists(destination_path):
-                    os.remove(destination_path)
-                stats['errors'] += 1
-                continue
-
-            if is_main:
-                ProductImage.objects.filter(product=product, is_main=True).delete()
-
-            ProductImage.objects.create(
-                product=product,
-                image=relative_path,
-                is_main=is_main,
-                order=0 if is_main else ProductImage.objects.filter(product=product).count()
-            )
-            logs.append(f"[OK] Image {'principale' if is_main else 'ajoutée'}: {dest_filename} pour {product.reference}")
-            stats['success'] += 1
-
-        # Message de succès
-        success_msg = f"[OK] Importation terminée !\n"
-        success_msg += f"- {stats['success']}/{stats['total']} images importées\n"
-        success_msg += f"- {stats['not_found']} produits non trouvés\n"
-        success_msg += f"- {stats['errors']} erreurs"
-        messages.success(request, success_msg)
-        if not_found_products:
-            warning_msg = f"[ATTENTION] Produits non trouvés ({len(not_found_products)}) :\n"
-            warning_msg += "\n".join([f"- {name}" for name in list(not_found_products)[:10]])
-            if len(not_found_products) > 10:
-                warning_msg += f"\n... et {len(not_found_products) - 10} autres"
-            messages.warning(request, warning_msg)
-        request.session['import_logs'] = logs
+                return False, f"Erreur lors de l'import de {os.path.basename(source_path)}: {e}"
+        
+        def process_product_folder(product_folder_path):
+            """Traite un dossier de produit
+            Structure attendue:
+            - Dossier produit (nom du produit)
+              - Sous-dossier référence (numéro de référence du produit)
+                - Image/ (contient l'image principale)
+                - Menu/ (contient les images de la galerie)
+            """
+            folder_name = os.path.basename(product_folder_path)
+            logs = []
+            
+            # Chercher le sous-dossier de référence (premier sous-dossier)
+            reference_folders = [d for d in os.listdir(product_folder_path) 
+                                if os.path.isdir(os.path.join(product_folder_path, d))]
+            
+            if not reference_folders:
+                logs.append(f"[ATTENTION] Aucun sous-dossier trouve")
+                return {
+                    'status': 'no_reference_folder',
+                    'name': folder_name,
+                    'logs': logs
+                }
+            
+            # Prendre le premier sous-dossier (qui contient le numéro de référence)
+            reference_folder = reference_folders[0]
+            reference_path = os.path.join(product_folder_path, reference_folder)
+            logs.append(f"[DOSSIER] Sous-dossier reference: {reference_folder}")
+            
+            # Extraire la reference du NOM DU SOUS-DOSSIER
+            detected_ref = extract_reference_from_folder_name(reference_folder)
+            if detected_ref:
+                logs.append(f"[REF] Reference detectee: {detected_ref}")
+            
+            # Trouver le produit en utilisant le nom du sous-dossier de référence
+            product, reference = find_product_by_reference(reference_folder)
+            
+            if not product:
+                error_msg = f"[ATTENTION] Produit non trouve dans la base de donnees"
+                logs.append(error_msg)
+                logs.append(f"   Dossier: {folder_name}")
+                logs.append(f"   Sous-dossier référence: {reference_folder}")
+                if reference:
+                    logs.append(f"   Référence recherchée: {reference}")
+                return {
+                    'status': 'not_found',
+                    'name': folder_name,
+                    'logs': logs
+                }
+            
+            logs.append(f"[OK] Produit trouve: [{product.reference}] {product.name}")
+            
+            # Chercher les dossiers Image et Menu (insensible a la casse)
+            image_folder = None
+            menu_folder = None
+            
+            for item in os.listdir(reference_path):
+                item_path = os.path.join(reference_path, item)
+                if os.path.isdir(item_path):
+                    item_lower = item.lower()
+                    if item_lower == 'image':
+                        image_folder = item_path
+                    elif item_lower == 'menu':
+                        menu_folder = item_path
+            
+            images_added = 0
+            
+            # Traiter l'image principale (dossier Image)
+            if image_folder:
+                image_files = get_image_files(image_folder)
+                if image_files:
+                    # Prendre la première image comme image principale
+                    success, msg = copy_image_to_media(image_files[0], product, is_main=True)
+                    if success:
+                        images_added += 1
+                        logs.append(f"[OK] {msg}")
+                    else:
+                        logs.append(f"[ERREUR] {msg}")
+                else:
+                    logs.append(f"[ATTENTION] Aucune image trouvee dans le dossier Image")
+            else:
+                logs.append(f"[ATTENTION] Dossier 'Image' non trouve")
+            
+            # Traiter les images supplementaires (dossier Menu)
+            if menu_folder:
+                menu_images = get_image_files(menu_folder)
+                for image_path in menu_images:
+                    success, msg = copy_image_to_media(image_path, product, is_main=False)
+                    if success:
+                        images_added += 1
+                        logs.append(f"[OK] {msg}")
+                    else:
+                        logs.append(f"[ERREUR] {msg}")
+            else:
+                logs.append(f"[ATTENTION] Dossier 'Menu' non trouve")
+            
+            return {
+                'status': 'success',
+                'name': folder_name,
+                'product': product,
+                'images_count': images_added,
+                'logs': logs
+            }
+        
+        # Traiter tous les dossiers de produits
+        try:
+            product_folders = [
+                os.path.join(images_path, d) 
+                for d in os.listdir(images_path) 
+                if os.path.isdir(os.path.join(images_path, d))
+            ]
+            
+            # Statistiques
+            stats = {
+                'total': len(product_folders),
+                'success': 0,
+                'not_found': 0,
+                'errors': 0,
+                'total_images': 0
+            }
+            
+            not_found_products = []
+            detailed_logs = []
+            
+            # Traiter chaque dossier
+            for product_folder in product_folders:
+                try:
+                    result = process_product_folder(product_folder)
+                    
+                    if result['status'] == 'success':
+                        stats['success'] += 1
+                        stats['total_images'] += result['images_count']
+                    elif result['status'] == 'not_found':
+                        stats['not_found'] += 1
+                        not_found_products.append(result['name'])
+                    else:
+                        stats['errors'] += 1
+                    
+                    detailed_logs.extend(result['logs'])
+                    
+                except Exception as e:
+                    stats['errors'] += 1
+                    detailed_logs.append(f"[ERREUR] Erreur inattendue pour {os.path.basename(product_folder)}: {e}")
+            
+            # Message de succes
+            success_msg = f"[OK] Importation terminee!\n"
+            success_msg += f"- {stats['success']}/{stats['total']} produits traites avec succes\n"
+            success_msg += f"- {stats['total_images']} images importees\n"
+            success_msg += f"- {stats['not_found']} produits non trouves en base\n"
+            success_msg += f"- {stats['errors']} erreurs"
+            
+            messages.success(request, success_msg)
+            
+            # Afficher les produits non trouves
+            if not_found_products:
+                warning_msg = f"[ATTENTION] Produits non trouves ({len(not_found_products)}):\n"
+                warning_msg += "\n".join([f"- {name}" for name in not_found_products[:10]])
+                if len(not_found_products) > 10:
+                    warning_msg += f"\n... et {len(not_found_products) - 10} autres"
+                messages.warning(request, warning_msg)
+            
+            # Sauvegarder les logs detailles dans la session pour affichage
+            request.session['import_logs'] = detailed_logs
+            
+        except Exception as e:
+            messages.error(request, f"[ERREUR] Erreur lors de l'importation: {str(e)}")
+        
         return redirect('admin_panel:product_images_import')
-
+    
     # Récupérer les logs de la dernière importation si disponibles
     import_logs = request.session.pop('import_logs', None)
+    
+    # Statistiques actuelles
     stats = {
         'products': Product.objects.count(),
         'products_with_images': Product.objects.filter(images__isnull=False).distinct().count(),
         'total_images': ProductImage.objects.count(),
     }
+    
     return render(request, 'admin_panel/product_images_import.html', {
         'stats': stats,
         'import_logs': import_logs
     })
+
+
+@login_required
+def export_products_excel(request):
+    """Exporte les produits vers un fichier Excel avec le format attendu pour l'import d'images"""
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from openpyxl.utils import get_column_letter
+    
+    # Créer un nouveau classeur Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Produits"
+    
+    # Définir les colonnes (même format que data_product.xlsx)
+    columns = [
+        'Référence *',
+        'Nom du produit *',
+        'Catégorie *',
+        'Sous-catégorie *',
+        'Marque',
+        'Type',
+        'Collection',
+        'Prix (DH) *',
+        'Prix Promo (DH)',
+        'Quantité *',
+        'Statut',
+        'Description *',
+        'Caractéristiques',
+        'Garantie',
+        'Poids (kg)',
+        'Meta Titre SEO',
+        'Meta Description SEO',
+        'Best Seller',
+        'En vedette',
+        'Nouveau'
+    ]
+    
+    # Styles pour l'en-tête
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Écrire les en-têtes
+    for col_num, column_title in enumerate(columns, 1):
+        cell = ws.cell(row=1, column=col_num, value=column_title)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Récupérer les produits avec les relations
+    products = Product.objects.select_related(
+        'category', 'subcategory', 'brand', 'type', 'collection'
+    ).order_by('reference')
+    
+    # Mapping des statuts
+    status_mapping = {
+        'in_stock': 'En Stock',
+        'out_of_stock': 'Rupture de Stock',
+        'preorder': 'Précommande',
+        'discontinued': 'Discontinué',
+    }
+    
+    # Écrire les données des produits
+    for row_num, product in enumerate(products, 2):
+        row_data = [
+            product.reference,
+            product.name,
+            product.category.name if product.category else '',
+            product.subcategory.name if product.subcategory else '',
+            product.brand.name if product.brand else (product.brand_text or ''),
+            product.type.name if product.type else '',
+            product.collection.name if product.collection else '',
+            float(product.price) if product.price else '',
+            float(product.discount_price) if product.discount_price else '',
+            product.quantity,
+            status_mapping.get(product.status, product.status),
+            product.description or '',
+            product.caracteristiques or '',
+            product.warranty or '',
+            float(product.weight) if product.weight else '',
+            product.meta_title or '',
+            product.meta_description or '',
+            'OUI' if product.is_bestseller else 'NON',
+            'OUI' if product.is_featured else 'NON',
+            'OUI' if product.is_new else 'NON'
+        ]
+        
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+    
+    # Ajuster la largeur des colonnes
+    column_widths = [15, 50, 20, 25, 20, 20, 20, 12, 15, 10, 18, 60, 50, 20, 12, 50, 80, 12, 12, 10]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[get_column_letter(col_num)].width = width
+    
+    # Figer la première ligne
+    ws.freeze_panes = 'A2'
+    
+    # Créer la réponse HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    
+    # Nom du fichier avec la date
+    filename = f"produits_goback_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    # Sauvegarder le classeur dans la réponse
+    wb.save(response)
+    
+    return response
