@@ -234,7 +234,7 @@
                     </div>
 
                     <!-- Formulaire d'importation -->
-                    <form method="post" id="importForm">
+                    <form method="post" id="importForm" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="images" class="form-label">
