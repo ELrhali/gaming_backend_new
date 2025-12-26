@@ -157,7 +157,7 @@ class Product(models.Model):
     # Informations de base
     reference = models.CharField(max_length=100, unique=True, verbose_name="Référence")
     name = models.CharField(max_length=300, verbose_name="Nom")
-    slug = models.SlugField(max_length=300, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     
     # SEO et description
     meta_title = models.CharField(max_length=200, blank=True, verbose_name="Meta Titre")

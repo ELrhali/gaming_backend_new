@@ -143,17 +143,33 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = os.getenv('STATIC_URL', '/static/')
+STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
-# Seulement inclure le dossier static s'il existe
+# Seulement inclure le dossier static s'il existe (uniquement en DEBUG) et éviter d'inclure STATIC_ROOT
 _static_dir = BASE_DIR / 'static'
-STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
+STATICFILES_DIRS = []
+# N'ajouter le répertoire local des statics que si on est en DEBUG pour éviter
+# d'exposer/dupliquer STATIC_ROOT en production (cause d'Erreur E002)
+if DEBUG and _static_dir.exists():
+    # éviter d'ajouter STATIC_ROOT dans STATICFILES_DIRS
+    try:
+        # comparer chemins résolus pour être robuste aux chemins relatifs/absolus
+        from pathlib import Path as _Path
+        if _Path(STATIC_ROOT).resolve() != _static_dir.resolve():
+            STATICFILES_DIRS = [_static_dir]
+    except Exception:
+        # en dernier recours comparer en tant que chaînes
+        if str(STATIC_ROOT) != str(_static_dir):
+            STATICFILES_DIRS = [_static_dir]
+
+# En plus, filtrer explicitement STATIC_ROOT au cas où d'autres configurations l'auront ajouté
+# (par ex. un script de déploiement ou un package tiers). Cela empêche l'erreur E002 quoiqu'il arrive.
+try:
+    import os as _os
+    STATICFILES_DIRS = [p for p in STATICFILES_DIRS if _os.path.abspath(str(p)) != _os.path.abspath(str(STATIC_ROOT))]
+except Exception:
+    pass
 
 # Media files (uploads)
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
@@ -351,3 +367,15 @@ JAZZMIN_UI_TWEAKS = {
     # Custom CSS
     "custom_css": "admin/css/custom_admin.css",
 }
+
+# --- Final safety: ensure STATIC_ROOT is never included in STATICFILES_DIRS ---
+try:
+    import os as _os
+    # Normalize paths and filter any entry equal to STATIC_ROOT (robust to Path/str)
+    STATICFILES_DIRS = [p for p in STATICFILES_DIRS if _os.path.abspath(str(p)) != _os.path.abspath(str(STATIC_ROOT))]
+except Exception:
+    # If something goes wrong, fall back to ensure we don't accidentally include STATIC_ROOT
+    if isinstance(STATICFILES_DIRS, (list, tuple)):
+        STATICFILES_DIRS = [p for p in STATICFILES_DIRS if str(p) != str(STATIC_ROOT)]
+    else:
+        STATICFILES_DIRS = []
